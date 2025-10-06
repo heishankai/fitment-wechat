@@ -33,6 +33,12 @@ export default [
         UniHelper: true,
         Page: true,
         AnyObject: true,
+        onLoad: true,
+        onShow: true,
+        onHide: true,
+        onUnload: true,
+        onReady: true,
+        onError: true,
         // 全局自动导入
       },
     },

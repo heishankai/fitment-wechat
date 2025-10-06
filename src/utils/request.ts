@@ -1,10 +1,5 @@
-// store
-import { useUserInfoStore } from '@/stores'
-import { Base64 } from 'js-base64'
-
-// export const BASEURL = 'http://127.0.0.1:7001'
-export const BASEURL = 'https://www.1shaoyan.com' // 线上地址
-const WXBASEURL = '/api/wechat'
+export const BASEURL = 'http://127.0.0.1:3000' // 本地地址
+// export const BASEURL = 'https://www.1shaoyan.com' // 线上地址
 
 export const uploadFileUrl = BASEURL + '/api/admin/uploadFile'
 
@@ -20,7 +15,7 @@ const httpInterceptor = {
   invoke(options: UniApp.RequestOptions): UniApp.RequestOptions {
     // 1. 非 http 开头时需要拼接完整路径
     if (!options?.url?.startsWith('http')) {
-      options.url = BASEURL + WXBASEURL + options?.url
+      options.url = BASEURL + options?.url
     }
     // 2. 设置超时时间 (默认是60s)
     options.timeout = 10000
@@ -31,8 +26,8 @@ const httpInterceptor = {
     }
 
     // 4. 添加token (因为后端用 Basic Auth 进行身份验证)
-    const { userInfo } = useUserInfoStore()
-    const token = 'Basic ' + Base64.encode(userInfo?.user_token + ':')
+    const userInfo = wx.getStorageSync('userInfo') ?? {}
+    const token = `Bearer ${userInfo?.token}`
 
     if (token) {
       options.header.Authorization = token
@@ -66,9 +61,9 @@ export const request = <T>(options: UniApp.RequestOptions): Promise<Data<T>> => 
 
         if (statusCode === 401) {
           // 401错误  -> 清理用户信息，跳转到登录页
-          const userInfoStore = useUserInfoStore()
-          userInfoStore.clear()
-          uni.navigateTo({ url: '/mine-subpackage/login/index' })
+          console.log('401错误')
+          wx.removeStorageSync('userInfo')
+          // uni.navigateTo({ url: '/mine-subpackage/login/index' })
           return
         }
 

@@ -1,16 +1,22 @@
 import { request } from '@/utils/request'
 
 /**
- * 获取首页人员数据
+ * 登录
  */
-export const getAllUserInfoListService = (params: {
-  page: number
-  limit: number
-  gender: number
-}): Promise<any> => {
+export const loginService = (params: any): Promise<any> => {
   return request({
     method: 'GET',
-    url: '/home/getAllUserInfoList',
+    url: '/wechat/wechat-user/login',
     data: params,
+  })
+}
+
+/**
+ * 获取用户信息
+ */
+export const getUserInfoService = (): Promise<any> => {
+  return request({
+    method: 'GET',
+    url: '/admin/users',
   })
 }
