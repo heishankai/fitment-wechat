@@ -63,7 +63,7 @@ export const request = <T>(options: UniApp.RequestOptions): Promise<Data<T>> => 
           // 401错误  -> 清理用户信息，跳转到登录页
           console.log('401错误')
           wx.removeStorageSync('userInfo')
-          // uni.navigateTo({ url: '/mine-subpackage/login/index' })
+          uni.navigateTo({ url: '/subpackages/login/index' })
           return
         }
 
