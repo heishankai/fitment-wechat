@@ -64,7 +64,7 @@ const handleLogin = async (): Promise<void> => {
 page {
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00cec9 0%, #00b4d8 50%, #0077b6 100%);
   position: relative;
 }
 
@@ -93,7 +93,7 @@ page {
 .circle {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   animation: float 6s ease-in-out infinite;
 }
 
@@ -170,7 +170,7 @@ page {
   left: -10rpx;
   right: -10rpx;
   bottom: -10rpx;
-  border: 2rpx solid rgba(255, 255, 255, 0.3);
+  border: 2rpx solid rgba(255, 255, 255, 0.4);
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
 }
