@@ -64,7 +64,7 @@ const handleLogin = async (): Promise<void> => {
 page {
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #00cec9 0%, #00b4d8 50%, #0077b6 100%);
+  background: linear-gradient(135deg, #00cec9 0%, #00b4d8 50%, #0099cc 100%);
   position: relative;
 }
 
