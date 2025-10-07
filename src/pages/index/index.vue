@@ -1,6 +1,9 @@
 <template>
   <view class="container">
     <button @click="handleLogin">一键登录</button>
+    <button open-type="getPhoneNumber" @getphonenumber="handleGetPhoneNumber" class="phone-btn">
+      获取手机号
+    </button>
   </view>
 </template>
 
@@ -30,6 +33,11 @@ const handleLogin = async (): Promise<void> => {
 
   wx.hideLoading()
   // uni.navigateBack({ delta: 1 })
+}
+
+// 获取手机号码
+const handleGetPhoneNumber = (e: any): void => {
+  console.log('e', e)
 }
 
 onLoad(() => {
