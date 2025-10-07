@@ -25,43 +25,43 @@ defineProps({
   },
 })
 
-const tabList = [
+const tabList = ref([
   {
     selected: '0',
     pagePath: '/pages/home/index',
-    iconPath: '../static/tabbar/home.png',
-    selectedIconPath: '../static/tabbar/home_on.png',
     text: '首页',
+    iconPath: '/static/tabbar/index.png',
+    selectedIconPath: '/static/tabbar/index_on.png',
   },
   {
     selected: '1',
     pagePath: '/pages/price/index',
-    iconPath: '../static/tabbar/price.png',
-    selectedIconPath: '../static/tabbar/price_on.png',
     text: '工价',
+    iconPath: '/static/tabbar/copywriter.png',
+    selectedIconPath: '/static/tabbar/copywriter_on.png',
   },
   {
     selected: '2',
     pagePath: '/pages/house/index',
-    iconPath: '../static/tabbar/house.png',
-    selectedIconPath: '../static/tabbar/house_on.png',
     text: '我的房子',
+    iconPath: '/static/tabbar/taletelling.png',
+    selectedIconPath: '/static/tabbar/taletelling_on.png',
   },
   {
     selected: '3',
     pagePath: '/pages/materials/index',
-    iconPath: '../static/tabbar/materials.png',
-    selectedIconPath: '../static/tabbar/materials_on.png',
     text: '辅材',
+    iconPath: '/static/tabbar/order.png',
+    selectedIconPath: '/static/tabbar/order_on.png',
   },
   {
     selected: '4',
     pagePath: '/pages/profile/index',
-    iconPath: '../static/tabbar/profile.png',
-    selectedIconPath: '../static/tabbar/profile_on.png',
     text: '我的',
+    iconPath: '/static/tabbar/mine.png',
+    selectedIconPath: '/static/tabbar/mine_on.png',
   },
-]
+])
 
 // 跳转 tabBar 菜单栏
 const switchTab = (item): void => {
