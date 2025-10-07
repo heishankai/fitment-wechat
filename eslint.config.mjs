@@ -27,6 +27,7 @@ export default [
       globals: {
         uni: true,
         wx: true,
+        ref: true,
         WechatMiniprogram: true,
         getCurrentPages: true,
         UniApp: true,
