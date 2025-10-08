@@ -6,7 +6,23 @@
       :class="['tab-bar-item', { center: index === 2 }]"
       @click="switchTab(item)"
     >
-      <image :src="selected === item?.selected ? item?.selectedIconPath : item?.iconPath" />
+      <!-- 中间的房屋图标特殊处理 -->
+      <view v-if="index === 2" class="house-container">
+        <image 
+          :src="selected === item?.selected ? item?.selectedIconPath : item?.iconPath" 
+          class="house-icon building-animation"
+        />
+        <!-- 建造动画效果 - 一直显示 -->
+        <view class="building-effects">
+          <view class="brick brick-1"></view>
+          <view class="brick brick-2"></view>
+          <view class="brick brick-3"></view>
+          <view class="sparkle sparkle-1"></view>
+          <view class="sparkle sparkle-2"></view>
+        </view>
+      </view>
+      <!-- 其他普通图标 -->
+      <image v-else :src="selected === item?.selected ? item?.selectedIconPath : item?.iconPath" />
       <text :style="{ color: selected === item?.selected ? selectedColor : color }">
         {{ item.text }}
       </text>
@@ -15,8 +31,8 @@
 </template>
 
 <script setup lang="ts">
-const color = '#C8BFBF'
-const selectedColor = '#151515'
+const color = '#2D3748'
+const selectedColor = '#00cec9'
 
 defineProps({
   selected: {
@@ -30,36 +46,37 @@ const tabList = ref([
     selected: '0',
     pagePath: '/pages/home/index',
     text: '首页',
-    iconPath: '/static/tabbar/index.png',
-    selectedIconPath: '/static/tabbar/index_on.png',
+    iconPath: '/static/tabbar/home.png',
+    selectedIconPath: '/static/tabbar/home_selected.png',
   },
   {
     selected: '1',
     pagePath: '/pages/price/index',
     text: '工价',
-    iconPath: '/static/tabbar/copywriter.png',
-    selectedIconPath: '/static/tabbar/copywriter_on.png',
+    iconPath: '/static/tabbar/price.png',
+    selectedIconPath: '/static/tabbar/price_selected.png',
   },
   {
     selected: '2',
     pagePath: '/pages/house/index',
-    text: '我的房子',
-    iconPath: '/static/tabbar/taletelling.png',
-    selectedIconPath: '/static/tabbar/taletelling_on.png',
+    text: '',
+    iconPath: '/static/tabbar/house.png',
+    selectedIconPath: '/static/tabbar/house.png',
+    isAnimated: true,
   },
   {
     selected: '3',
     pagePath: '/pages/materials/index',
     text: '辅材',
-    iconPath: '/static/tabbar/order.png',
-    selectedIconPath: '/static/tabbar/order_on.png',
+    iconPath: '/static/tabbar/materials.png',
+    selectedIconPath: '/static/tabbar/materials_selected.png',
   },
   {
     selected: '4',
     pagePath: '/pages/profile/index',
     text: '我的',
-    iconPath: '/static/tabbar/mine.png',
-    selectedIconPath: '/static/tabbar/mine_on.png',
+    iconPath: '/static/tabbar/profile.png',
+    selectedIconPath: '/static/tabbar/profile_selected.png',
   },
 ])
 
@@ -112,10 +129,128 @@ const switchTab = (item): void => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: visible;
 
   image {
-    width: 80rpx;
-    height: 80rpx;
+    width: 60rpx;
+    height: 60rpx;
+  }
+}
+
+/* 房屋容器 */
+.house-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 房屋图标动画 */
+.house-icon {
+  transition: all 0.3s ease;
+}
+
+.house-icon.building-animation {
+  animation: buildingPulse 2s ease-in-out infinite;
+}
+
+/* 建造效果容器 */
+.building-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* 砖块动画 */
+.brick {
+  position: absolute;
+  width: 8rpx;
+  height: 8rpx;
+  background-color: #00cec9;
+  border-radius: 2rpx;
+  opacity: 0;
+}
+
+.brick-1 {
+  top: 20rpx;
+  left: 30rpx;
+  animation: brickFall 1.5s ease-in-out infinite;
+}
+
+.brick-2 {
+  top: 15rpx;
+  right: 25rpx;
+  animation: brickFall 1.5s ease-in-out infinite 0.3s;
+}
+
+.brick-3 {
+  bottom: 25rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: brickFall 1.5s ease-in-out infinite 0.6s;
+}
+
+/* 闪光效果 */
+.sparkle {
+  position: absolute;
+  width: 6rpx;
+  height: 6rpx;
+  background-color: #FFD700;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.sparkle-1 {
+  top: 10rpx;
+  left: 20rpx;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.sparkle-2 {
+  bottom: 15rpx;
+  right: 20rpx;
+  animation: sparkle 2s ease-in-out infinite 0.8s;
+}
+
+/* 动画关键帧 */
+@keyframes buildingPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes brickFall {
+  0% {
+    opacity: 0;
+    transform: translateY(-20rpx);
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
   }
 }
 </style>

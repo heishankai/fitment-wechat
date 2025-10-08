@@ -61,32 +61,32 @@
     "list": [
       {
         "pagePath": "pages/home/index",
-        "iconPath": "static/tabbar/index.png",
-        "selectedIconPath": "static/tabbar/index_on.png",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home_selected.png",
         "text": "首页"
       },
       {
         "pagePath": "pages/price/index",
-        "iconPath": "static/tabbar/copywriter.png",
-        "selectedIconPath": "static/tabbar/copywriter_on.png",
+        "iconPath": "static/tabbar/price.png",
+        "selectedIconPath": "static/tabbar/price_selected.png",
         "text": "工价"
       },
       {
         "pagePath": "pages/house/index",
-        "iconPath": "static/tabbar/taletelling.png",
-        "selectedIconPath": "static/tabbar/taletelling_on.png",
+        "iconPath": "static/tabbar/house.png",
+        "selectedIconPath": "static/tabbar/house_selected.png",
         "text": "我的房子"
       },
       {
         "pagePath": "pages/materials/index",
-        "iconPath": "static/tabbar/order.png",
-        "selectedIconPath": "static/tabbar/order_on.png",
+        "iconPath": "static/tabbar/materials.png",
+        "selectedIconPath": "static/tabbar/materials_selected.png",
         "text": "辅材"
       },
       {
         "pagePath": "pages/profile/index",
-        "iconPath": "static/tabbar/mine.png",
-        "selectedIconPath": "static/tabbar/mine_on.png",
+        "iconPath": "static/tabbar/profile.png",
+        "selectedIconPath": "static/tabbar/profile_selected.png",
         "text": "我的"
       }
     ]
