@@ -99,7 +99,7 @@
     }
   ],
   "preloadRule": {
-    "pages/home/index": {
+    "pages/profile/index": {
       "network": "all",
       "packages": ["subpackages"]
     }
