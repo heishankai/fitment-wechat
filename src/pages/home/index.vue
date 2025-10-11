@@ -1,6 +1,14 @@
 <template>
   <view class="container">
-    <!-- <search-navbar :selectedTab="selectedTab" @updateSelectTab="updateSelectTab" /> -->
+    <view
+      class="custom-navbar"
+      :style="{
+        paddingTop: safeArea.top + 8 + 'px',
+      }"
+    >
+      <text>深圳</text>
+      <uni-icons type="down" color="#fff" size="16" />
+    </view>
     <scroll-view
       enable-back-to-top
       refresher-enabled
@@ -14,7 +22,6 @@
       <uni-icons custom-prefix="iconfont" type="icon-wushuju" color="#808080" size="100" />
     </scroll-view>
     <tabbar selected="0"></tabbar>
-    <custom-popup ref="subscribeModalRef" />
   </view>
 </template>
 
@@ -24,17 +31,13 @@ import tabbar from '@/components/custom-tab-bar.vue'
 import { useGuessList } from '@/utils'
 import { getUserInfoService } from './service'
 
-onLoad(() => {
-  getUserInfoService().then((res) => {
-    console.log('res', res)
-  })
-  console.log('发送请求')
-})
+// 获取屏幕边界到安全区域距离
+const { safeArea } = wx.getSystemInfoSync()
+console.log(safeArea, 'safeArea')
 
 // 组合式函数调用
 const { guessRef, onScrolltolower } = useGuessList()
-
-const subscribeModalRef = ref<any>()
+// 当前下拉刷新状态
 const isTriggered = ref(false)
 
 // 自定义下拉刷新被触发
@@ -50,13 +53,31 @@ const onRefresherrefresh = async (): Promise<void> => {
   // 关闭动画
   isTriggered.value = false
 }
+
+onLoad(() => {
+  getUserInfoService().then((res) => {
+    console.log('res', res)
+  })
+})
 </script>
 
 <style lang="scss">
 page {
   height: 100%;
-  overflow: hidden;
-  background: linear-gradient(to bottom, #f0faf9, #b3e5dc, #b3e5dc);
+}
+
+.custom-navbar {
+  color: #fff;
+  padding: 0px 12px 12px 0px;
+  background: linear-gradient(135deg, #00cec9, #00b4d8);
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: bold;
+
+  text {
+    padding-left: 12px;
+  }
 }
 
 .container {
@@ -67,6 +88,5 @@ page {
 
 .scroll-view {
   flex: 1;
-  overflow: hidden;
 }
 </style>
