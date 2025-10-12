@@ -50,7 +50,7 @@ const caseList = computed(() => {
   if (currentFilter.value === null) {
     return allCaseList.value
   }
-  return allCaseList.value.filter((item) => item.remodel_type === currentFilter.value)
+  return allCaseList.value?.filter((item) => item?.remodel_type === currentFilter?.value)
 })
 
 // 获取案例列表数据
@@ -99,7 +99,6 @@ const resetData = (): void => {
 // 切换筛选条件
 const switchFilter = (remodelType: number | null): void => {
   currentFilter.value = remodelType
-  // 使用计算属性，无需手动筛选
 }
 
 // 暴露方法
