@@ -40,6 +40,8 @@ export default [
         onUnload: true,
         onReady: true,
         onError: true,
+        computed: true,
+        toRefs: true,
         // 全局自动导入
       },
     },

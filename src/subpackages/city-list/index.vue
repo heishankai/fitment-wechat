@@ -42,8 +42,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
 import { getCityListService, type CityData } from './service'
 
 // 响应式数据

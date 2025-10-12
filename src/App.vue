@@ -30,7 +30,7 @@ onUnload(() => {
 /* 全局背景色 */
 page {
   box-sizing: border-box;
-  background-color: #ffffff;
+  background: #f8f9fa;
   margin: 0;
   padding: 0;
 }

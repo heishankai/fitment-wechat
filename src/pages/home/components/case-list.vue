@@ -1,6 +1,11 @@
 <template>
   <view class="case-list">
-    <view class="case-item" v-for="item in caseList" :key="item.id">
+    <view
+      class="case-item"
+      v-for="item in caseList"
+      :key="item.id"
+      @click="navigateToCaseDetail(item.id)"
+    >
       <view class="case-image">
         <image :src="item?.drawingroom_image[0]" mode="aspectFill" class="image" />
         <view class="case-tag" :class="{ old: item?.remodel_type !== 1 }">
@@ -88,6 +93,13 @@ const resetData = (): void => {
 // 切换筛选条件
 const switchFilter = (remodelType: number | null): void => {
   currentFilter.value = remodelType
+}
+
+// 跳转案例详情
+const navigateToCaseDetail = (id: number): void => {
+  wx.navigateTo({
+    url: `/subpackages/case-item-detail/index?id=${id}`,
+  })
 }
 
 // 监听城市变化，重新加载数据

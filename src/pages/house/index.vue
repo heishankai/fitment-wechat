@@ -10,7 +10,7 @@
       class="scroll-view"
       scroll-y
     >
-     我的房子
+      我的房子
     </scroll-view>
     <tabbar selected="2"></tabbar>
     <custom-popup ref="subscribeModalRef" />
@@ -18,7 +18,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 // components
 import tabbar from '@/components/custom-tab-bar.vue'
 import { useGuessList } from '@/utils'

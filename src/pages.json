@@ -100,6 +100,13 @@
           "style": {
             "navigationBarTitleText": "城市选择"
           }
+        },
+        {
+          "path": "case-item-detail/index",
+          "style": {
+            "navigationBarTitleText": "案例详情",
+            "disableScroll": true
+          }
         }
       ]
     }
@@ -107,9 +114,7 @@
   "preloadRule": {
     "pages/profile/index": {
       "network": "all",
-      "packages": [
-        "subpackages"
-      ]
+      "packages": ["subpackages"]
     }
   }
 }
