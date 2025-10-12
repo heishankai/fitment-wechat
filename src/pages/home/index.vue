@@ -1,8 +1,8 @@
 <template>
   <view class="container">
     <view class="custom-navbar" :style="{ paddingTop: safeArea.top + 4 + 'px' }">
-      <view class="address">
-        <text>深圳</text>
+      <view class="address" @click="navigateToCityList">
+        <text>{{ selectedCity }}</text>
         <uni-icons type="down" color="#fff" size="18" />
       </view>
       <describe-header />
@@ -32,7 +32,7 @@
       :scroll-with-animation="true"
       :enable-flex="true"
     >
-      <case-list ref="guessRef" />
+      <case-list ref="guessRef" :selected-city="selectedCity" />
     </scroll-view>
     <tabbar selected="0"></tabbar>
   </view>
@@ -55,6 +55,8 @@ const { guessRef, onScrolltolower } = useGuessList()
 // 响应式数据
 const isTriggered = ref(false)
 const activeTab = ref(0)
+// 当前选中的城市
+const selectedCity = ref('杭州')
 
 // 标签页配置
 const TAB_CONFIG = [
@@ -85,6 +87,28 @@ const onRefresherrefresh = async (): Promise<void> => {
 
   isTriggered.value = false
 }
+
+// 跳转城市选择页面
+const navigateToCityList = (): void => {
+  wx.navigateTo({
+    url: '/subpackages/city-list/index',
+  })
+}
+
+// 从本地存储加载选中的城市
+const loadSelectedCity = (): void => {
+  const city = wx.getStorageSync('selectedCity')
+  if (city && city.city_name) {
+    selectedCity.value = city.city_name
+  }
+
+  console.log(city, 'city')
+}
+
+// 页面显示时检查城市更新
+onShow(() => {
+  loadSelectedCity()
+})
 </script>
 
 <style lang="scss">
@@ -143,32 +167,50 @@ page {
   margin: 20px 12px 0 12px;
 
   .title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 12px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 16px;
     padding-left: 4px;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 4px;
+      width: 40px;
+      height: 3px;
+      background: linear-gradient(90deg, #00cec9, #00b4d8);
+      border-radius: 2px;
+    }
   }
 
   .tabs {
     display: flex;
-    background: #f5f5f5;
-    border-radius: 8px;
-    padding: 4px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 206, 201, 0.1);
 
     .tab {
       flex: 1;
-      padding: 8px 12px;
+      padding: 12px 16px;
       text-align: center;
-      font-size: 13px;
-      color: #666;
-      border-radius: 6px;
-      transition: all 0.2s ease;
+      font-size: 14px;
+      color: #6c757d;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      position: relative;
+      z-index: 1;
 
       &.active {
-        background: #00cec9;
+        background: linear-gradient(135deg, #00cec9, #00b4d8);
         color: #fff;
-        font-weight: 500;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0, 206, 201, 0.3);
       }
     }
   }

@@ -16,31 +16,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { getCaseListService } from '../service'
 
-// 类型定义
-interface CaseItem {
-  id: string | number
-  remodel_type: number
-  drawingroom_image: string[]
-  housing_type: string
-  city_name: string
-  square_number: number
+// 接收父组件传递的城市信息
+interface Props {
+  selectedCity: string
 }
 
-interface PageParams {
-  pageIndex: number
-  pageSize: number
-}
+const props = defineProps<Props>()
 
 // 响应式数据
-const allCaseList = ref<CaseItem[]>([]) // 存储所有数据
+const allCaseList = ref<any[]>([]) // 存储所有数据
 const finish = ref(false)
 const currentFilter = ref<number | null>(null)
-const loading = ref(false)
 
-const pageParams = ref<PageParams>({
+const pageParams = ref<{ pageIndex: number; pageSize: number }>({
   pageIndex: 1,
   pageSize: 10,
 })
@@ -55,36 +47,34 @@ const caseList = computed(() => {
 
 // 获取案例列表数据
 const loadCaseData = async (): Promise<void> => {
-  if (finish.value || loading.value) {
+  if (finish.value) {
     if (finish.value) {
       uni.showToast({ icon: 'none', title: '没有更多数据~' })
     }
     return
   }
 
-  loading.value = true
+  // 构建请求参数，包含城市信息
+  const params = {
+    ...pageParams.value,
+    city_name: props.selectedCity || '杭州', // 默认城市
+  }
 
-  try {
-    const { success, data } = await getCaseListService({ ...pageParams.value })
+  const { success, data } = await getCaseListService(params)
 
-    if (success && data?.length) {
-      // 存储到全部数据中
-      allCaseList.value.push(...data)
+  if (success && data?.length) {
+    // 存储到全部数据中
+    allCaseList.value.push(...data)
 
-      // 更新分页参数
-      pageParams.value.pageIndex++
+    // 更新分页参数
+    pageParams.value.pageIndex++
 
-      // 检查是否还有更多数据
-      if (data.length < pageParams.value.pageSize) {
-        finish.value = true
-      }
-    } else {
+    // 检查是否还有更多数据
+    if (data.length < pageParams.value.pageSize) {
       finish.value = true
     }
-  } catch {
-    uni.showToast({ icon: 'none', title: '加载失败，请重试' })
-  } finally {
-    loading.value = false
+  } else {
+    finish.value = true
   }
 }
 
@@ -93,13 +83,26 @@ const resetData = (): void => {
   pageParams.value.pageIndex = 1
   allCaseList.value = []
   finish.value = false
-  loading.value = false
 }
 
 // 切换筛选条件
 const switchFilter = (remodelType: number | null): void => {
   currentFilter.value = remodelType
 }
+
+// 监听城市变化，重新加载数据
+watch(
+  () => props.selectedCity,
+  (newCity, oldCity) => {
+    if (newCity && newCity !== oldCity) {
+      console.log('城市变化:', oldCity, '->', newCity)
+      resetData()
+      loadCaseData()
+    }
+  },
+  // 立即执行，处理初始化
+  { immediate: false },
+)
 
 // 暴露方法
 defineExpose({
@@ -116,15 +119,38 @@ onLoad(() => {
 <style lang="scss">
 .case-list {
   padding: 24px 12px;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 
   .case-item {
     background: #fff;
-    border-radius: 12px;
+    border-radius: 16px;
     margin-bottom: 20px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(0, 206, 201, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #00cec9, #00b4d8);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 206, 201, 0.2);
+
+      &::before {
+        opacity: 1;
+      }
+    }
 
     .case-image {
       position: relative;
@@ -140,35 +166,50 @@ onLoad(() => {
         position: absolute;
         top: 12px;
         left: 12px;
-        background: #00cec9;
+        background: linear-gradient(135deg, #00cec9, #00b4d8);
         color: #fff;
-        padding: 4px 12px;
-        border-radius: 12px;
+        padding: 6px 16px;
+        border-radius: 20px;
         font-size: 12px;
-        font-weight: 500;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0, 206, 201, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
 
         &.old {
-          background: #f5f5f5;
-          color: #666;
+          background: linear-gradient(135deg, #6c757d, #495057);
+          color: #fff;
+          box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
         }
       }
     }
 
     .case-info {
-      padding: 16px;
+      padding: 20px;
+      background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
 
       .case-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 6px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
         line-height: 1.3;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
 
       .case-desc {
-        font-size: 13px;
-        color: #999;
-        line-height: 1.2;
+        font-size: 14px;
+        color: #6c757d;
+        line-height: 1.4;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+
+        &::before {
+          content: '📍';
+          margin-right: 6px;
+          font-size: 12px;
+        }
       }
     }
   }

@@ -94,6 +94,12 @@
             "navigationBarTitleText": "登录",
             "disableScroll": true
           }
+        },
+        {
+          "path": "city-list/index",
+          "style": {
+            "navigationBarTitleText": "城市选择"
+          }
         }
       ]
     }
@@ -101,7 +107,9 @@
   "preloadRule": {
     "pages/profile/index": {
       "network": "all",
-      "packages": ["subpackages"]
+      "packages": [
+        "subpackages"
+      ]
     }
   }
 }
