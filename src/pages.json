@@ -98,7 +98,8 @@
         {
           "path": "city-list/index",
           "style": {
-            "navigationBarTitleText": "城市选择"
+            "navigationBarTitleText": "城市选择",
+            "disableScroll": true
           }
         },
         {

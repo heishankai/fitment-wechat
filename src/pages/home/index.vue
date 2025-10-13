@@ -32,7 +32,14 @@
       :scroll-with-animation="true"
       :enable-flex="true"
     >
-      <case-list ref="guessRef" :selected-city="selectedCity" />
+      <view class="content-container" :class="{ 'content-transitioning': isContentTransitioning }">
+        <case-list 
+          ref="guessRef" 
+          :selected-city="selectedCity" 
+          :key="`case-list-${activeTab}`"
+          class="case-list-wrapper"
+        />
+      </view>
     </scroll-view>
     <tabbar selected="0"></tabbar>
   </view>
@@ -55,6 +62,7 @@ const { guessRef, onScrolltolower } = useGuessList()
 // 响应式数据
 const isTriggered = ref(false)
 const activeTab = ref(0)
+const isContentTransitioning = ref(false)
 // 当前选中的城市
 const selectedCity = ref('杭州')
 
@@ -66,14 +74,25 @@ const TAB_CONFIG = [
 ] as const
 
 // 切换标签页
-const switchTab = (tabIndex: number): void => {
+const switchTab = async (tabIndex: number): Promise<void> => {
   if (activeTab.value === tabIndex) return
 
-  activeTab.value = tabIndex
-  const currentTab = TAB_CONFIG[tabIndex]
-
-  // 通知 case-list 组件切换筛选条件
-  guessRef.value?.switchFilter(currentTab.remodelType)
+  // 开始内容切换动画
+  isContentTransitioning.value = true
+  
+  // 延迟切换tab状态，让动画更流畅
+  setTimeout(() => {
+    activeTab.value = tabIndex
+    const currentTab = TAB_CONFIG[tabIndex]
+    
+    // 通知 case-list 组件切换筛选条件
+    guessRef.value?.switchFilter(currentTab.remodelType)
+    
+    // 结束内容切换动画
+    setTimeout(() => {
+      isContentTransitioning.value = false
+    }, 150)
+  }, 100)
 }
 
 // 自定义下拉刷新被触发
@@ -127,12 +146,75 @@ page {
   height: 0; /* 确保 flex 子元素有正确的高度 */
 }
 
+/* 内容容器动画 */
+.content-container {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+  transform: translateY(0);
+  
+  &.content-transitioning {
+    opacity: 0.7;
+    transform: translateY(10px);
+  }
+}
+
+.case-list-wrapper {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* 主题色变量 */
+$primary-color: #00cec9;
+$secondary-color: #00cec9;
+$accent-color: #00a8cc;
+
 .custom-navbar {
   color: #fff;
   padding: 0px 12px 12px 0px;
-  background: linear-gradient(135deg, #00cec9, #00b4d8);
-  flex-direction: column;
+  position: relative;
+  overflow: hidden;
   display: flex;
+  flex-direction: column;
+  
+  /* 主题渐变背景 */
+  background: linear-gradient(
+    135deg,
+    $primary-color 0%,
+    $secondary-color 25%,
+    $accent-color 50%,
+    $primary-color 75%,
+    $secondary-color 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 12s ease-in-out infinite;
+  
+  /* 水彩纹理层 */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
+      radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  
+  /* 闪烁效果层 */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(circle at 15% 25%, rgba(255, 215, 0, 0.6) 1px, transparent 1px),
+      radial-gradient(circle at 75% 15%, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+      radial-gradient(circle at 35% 75%, rgba(255, 215, 0, 0.4) 1px, transparent 1px),
+      radial-gradient(circle at 85% 65%, rgba(255, 255, 255, 0.6) 1px, transparent 1px),
+      radial-gradient(circle at 55% 45%, rgba(255, 215, 0, 0.5) 1px, transparent 1px),
+      radial-gradient(circle at 25% 85%, rgba(255, 255, 255, 0.7) 1px, transparent 1px);
+    background-size: 200rpx 200rpx, 150rpx 150rpx, 180rpx 180rpx, 160rpx 160rpx, 170rpx 170rpx, 190rpx 190rpx;
+    animation: sparkleMove 6s linear infinite;
+    pointer-events: none;
+  }
 
   .address {
     margin-left: 12px;
@@ -193,6 +275,7 @@ page {
     padding: 6px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(0, 206, 201, 0.1);
+    position: relative;
 
     .tab {
       flex: 1;
@@ -201,16 +284,36 @@ page {
       font-size: 14px;
       color: #6c757d;
       border-radius: 8px;
-      transition: all 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       font-weight: 500;
       position: relative;
-      z-index: 1;
+      z-index: 2;
+      cursor: pointer;
+      transform: scale(1);
+      
+      &:hover {
+        transform: scale(1.02);
+        color: #495057;
+      }
 
       &.active {
-        background: linear-gradient(135deg, #00cec9, #00b4d8);
+        background: linear-gradient(135deg, $primary-color, $secondary-color);
         color: #fff;
         font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0, 206, 201, 0.3);
+        box-shadow: 0 6px 20px rgba(0, 206, 201, 0.4);
+        transform: scale(1.05);
+        z-index: 3;
+        
+        &::before {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          background: linear-gradient(135deg, $primary-color, $secondary-color);
+          border-radius: 10px;
+          z-index: -1;
+          opacity: 0.3;
+          filter: blur(8px);
+        }
       }
     }
   }
@@ -273,6 +376,30 @@ page {
         line-height: 1.2;
       }
     }
+  }
+}
+
+/* 动画关键帧 */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes sparkleMove {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(10rpx, -5rpx); }
+  50% { transform: translate(-5rpx, 10rpx); }
+  75% { transform: translate(5rpx, -8rpx); }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

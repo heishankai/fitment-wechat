@@ -140,8 +140,18 @@ onLoad(() => {
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     border: 1px solid rgba(0, 206, 201, 0.1);
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: slideInUp 0.6s ease-out forwards;
+    
+    // 为每个列表项添加延迟动画
+    @for $i from 1 through 10 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.08}s;
+      }
+    }
 
     &::before {
       content: '';
@@ -156,12 +166,17 @@ onLoad(() => {
     }
 
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0, 206, 201, 0.2);
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 16px 50px rgba(0, 206, 201, 0.25);
 
       &::before {
         opacity: 1;
       }
+    }
+    
+    &:active {
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 12px 40px rgba(0, 206, 201, 0.2);
     }
 
     .case-image {
@@ -224,6 +239,18 @@ onLoad(() => {
         }
       }
     }
+  }
+}
+
+/* 列表项进入动画 */
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>
