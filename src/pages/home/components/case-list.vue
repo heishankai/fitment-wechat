@@ -130,13 +130,13 @@ onLoad(() => {
 
 <style lang="scss">
 .case-list {
-  padding: 24px 12px;
+  padding: 12px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 
   .case-item {
     background: #fff;
     border-radius: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     border: 1px solid rgba(0, 206, 201, 0.1);

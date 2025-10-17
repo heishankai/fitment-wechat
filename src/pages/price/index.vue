@@ -1,7 +1,5 @@
 <template>
   <view class="container">
-    <!-- 顶部导航 -->
-    <!-- <custom-navbar></custom-navbar> -->
     <scroll-view
       enable-back-to-top
       refresher-enabled
@@ -50,7 +48,6 @@ const onRefresherrefresh = async (): Promise<void> => {
 page {
   height: 100%;
   overflow: hidden;
-  /* background-color: #efefef; */
 }
 
 .container {
