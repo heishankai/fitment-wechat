@@ -11,6 +11,7 @@
       scroll-y
     >
       我的房子
+       <uni-icons custom-prefix="iconfont" type="icon-xiaoqu" color="#808080" size="100" />
     </scroll-view>
     <tabbar selected="2"></tabbar>
     <custom-popup ref="subscribeModalRef" />

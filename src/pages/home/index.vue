@@ -33,9 +33,9 @@
       :enable-flex="true"
     >
       <view class="content-container" :class="{ 'content-transitioning': isContentTransitioning }">
-        <case-list 
-          ref="guessRef" 
-          :selected-city="selectedCity" 
+        <case-list
+          ref="guessRef"
+          :selected-city="selectedCity"
           :key="`case-list-${activeTab}`"
           class="case-list-wrapper"
         />
@@ -79,15 +79,15 @@ const switchTab = async (tabIndex: number): Promise<void> => {
 
   // 开始内容切换动画
   isContentTransitioning.value = true
-  
+
   // 延迟切换tab状态，让动画更流畅
   setTimeout(() => {
     activeTab.value = tabIndex
     const currentTab = TAB_CONFIG[tabIndex]
-    
+
     // 通知 case-list 组件切换筛选条件
     guessRef.value?.switchFilter(currentTab.remodelType)
-    
+
     // 结束内容切换动画
     setTimeout(() => {
       isContentTransitioning.value = false
@@ -151,7 +151,7 @@ page {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 1;
   transform: translateY(0);
-  
+
   &.content-transitioning {
     opacity: 0.7;
     transform: translateY(10px);
@@ -175,7 +175,7 @@ $accent-color: #00a8cc;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  
+
   /* 主题渐变背景 */
   background: linear-gradient(
     135deg,
@@ -187,31 +187,37 @@ $accent-color: #00a8cc;
   );
   background-size: 200% 200%;
   animation: gradientShift 12s ease-in-out infinite;
-  
+
   /* 水彩纹理层 */
   &::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: 
+    background:
       radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
       radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
     pointer-events: none;
   }
-  
+
   /* 闪烁效果层 */
   &::after {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: 
+    background-image:
       radial-gradient(circle at 15% 25%, rgba(255, 215, 0, 0.6) 1px, transparent 1px),
       radial-gradient(circle at 75% 15%, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
       radial-gradient(circle at 35% 75%, rgba(255, 215, 0, 0.4) 1px, transparent 1px),
       radial-gradient(circle at 85% 65%, rgba(255, 255, 255, 0.6) 1px, transparent 1px),
       radial-gradient(circle at 55% 45%, rgba(255, 215, 0, 0.5) 1px, transparent 1px),
       radial-gradient(circle at 25% 85%, rgba(255, 255, 255, 0.7) 1px, transparent 1px);
-    background-size: 200rpx 200rpx, 150rpx 150rpx, 180rpx 180rpx, 160rpx 160rpx, 170rpx 170rpx, 190rpx 190rpx;
+    background-size:
+      200rpx 200rpx,
+      150rpx 150rpx,
+      180rpx 180rpx,
+      160rpx 160rpx,
+      170rpx 170rpx,
+      190rpx 190rpx;
     animation: sparkleMove 6s linear infinite;
     pointer-events: none;
   }
@@ -290,7 +296,7 @@ $accent-color: #00a8cc;
       z-index: 2;
       cursor: pointer;
       transform: scale(1);
-      
+
       &:hover {
         transform: scale(1.02);
         color: #495057;
@@ -303,7 +309,7 @@ $accent-color: #00a8cc;
         box-shadow: 0 6px 20px rgba(0, 206, 201, 0.4);
         transform: scale(1.05);
         z-index: 3;
-        
+
         &::before {
           content: '';
           position: absolute;
@@ -381,15 +387,29 @@ $accent-color: #00a8cc;
 
 /* 动画关键帧 */
 @keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 @keyframes sparkleMove {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(10rpx, -5rpx); }
-  50% { transform: translate(-5rpx, 10rpx); }
-  75% { transform: translate(5rpx, -8rpx); }
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(10rpx, -5rpx);
+  }
+  50% {
+    transform: translate(-5rpx, 10rpx);
+  }
+  75% {
+    transform: translate(5rpx, -8rpx);
+  }
 }
 
 @keyframes fadeInUp {
