@@ -22,7 +22,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
 import { getCaseListService } from '../service'
 
 // 接收父组件传递的城市信息
@@ -52,6 +51,8 @@ const caseList = computed(() => {
 
 // 获取案例列表数据
 const loadCaseData = async (): Promise<void> => {
+  console.log('loadCaseData 被调用', { finish: finish.value, pageIndex: pageParams.value.pageIndex })
+  
   if (finish.value) {
     if (finish.value) {
       uni.showToast({ icon: 'none', title: '没有更多数据~' })
@@ -65,6 +66,7 @@ const loadCaseData = async (): Promise<void> => {
     city_name: props.selectedCity || '杭州', // 默认城市
   }
 
+  console.log('请求参数:', params)
   const { success, data } = await getCaseListService(params)
 
   if (success && data?.length) {
@@ -106,6 +108,7 @@ const navigateToCaseDetail = (id: number): void => {
 watch(
   () => props.selectedCity,
   (newCity, oldCity) => {
+    console.log('城市监听触发:', { newCity, oldCity, immediate: oldCity === undefined })
     if (newCity && newCity !== oldCity) {
       console.log('城市变化:', oldCity, '->', newCity)
       resetData()
@@ -113,7 +116,7 @@ watch(
     }
   },
   // 立即执行，处理初始化
-  { immediate: false },
+  { immediate: true },
 )
 
 // 暴露方法
@@ -122,15 +125,11 @@ defineExpose({
   getMore: loadCaseData,
   switchFilter,
 })
-
-onLoad(() => {
-  loadCaseData()
-})
 </script>
 
 <style lang="scss">
 .case-list {
-  padding: 12px;
+  padding: 8px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 
   .case-item {
@@ -145,7 +144,7 @@ onLoad(() => {
     opacity: 0;
     transform: translateY(30px);
     animation: slideInUp 0.6s ease-out forwards;
-    
+
     // 为每个列表项添加延迟动画
     @for $i from 1 through 10 {
       &:nth-child(#{$i}) {
@@ -173,7 +172,7 @@ onLoad(() => {
         opacity: 1;
       }
     }
-    
+
     &:active {
       transform: translateY(-3px) scale(1.01);
       box-shadow: 0 12px 40px rgba(0, 206, 201, 0.2);

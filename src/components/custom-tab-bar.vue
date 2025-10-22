@@ -52,7 +52,7 @@ const tabList = ref([
   {
     selected: '1',
     pagePath: '/pages/price/index',
-    text: '工价',
+    text: '工种',
     iconPath: '/static/tabbar/price.png',
     selectedIconPath: '/static/tabbar/price_selected.png',
   },

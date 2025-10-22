@@ -17,7 +17,9 @@
     {
       "path": "pages/price/index",
       "style": {
-        "navigationBarTitleText": "工价查询"
+        "navigationBarTitleText": "工种",
+        "navigationStyle": "custom",
+        "disableScroll": true
       }
     },
     {
@@ -62,7 +64,7 @@
         "pagePath": "pages/price/index",
         "iconPath": "static/tabbar/price.png",
         "selectedIconPath": "static/tabbar/price_selected.png",
-        "text": "工价"
+        "text": "工种"
       },
       {
         "pagePath": "pages/house/index",
@@ -103,9 +105,30 @@
           }
         },
         {
+          "path": "product-detail/index",
+          "style": {
+            "navigationBarTitleText": "商品详情",
+            "disableScroll": true
+          }
+        },
+        {
+          "path": "search-product/index",
+          "style": {
+            "navigationBarTitleText": "搜索商品",
+            "disableScroll": true
+          }
+        },
+        {
           "path": "case-item-detail/index",
           "style": {
             "navigationBarTitleText": "案例详情",
+            "disableScroll": true
+          }
+        },
+        {
+          "path": "work-type-detail/index",
+          "style": {
+            "navigationBarTitleText": "工种详情",
             "disableScroll": true
           }
         }

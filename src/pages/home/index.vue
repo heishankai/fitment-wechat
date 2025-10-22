@@ -119,12 +119,11 @@ const loadSelectedCity = (): void => {
   if (city && city.city_name) {
     selectedCity.value = city.city_name
   }
-
-  console.log(city, 'city')
+  console.log('当前城市:', selectedCity.value)
 }
 
 // 页面显示时检查城市更新
-onShow(() => {
+onLoad(() => {
   loadSelectedCity()
 })
 </script>
@@ -187,7 +186,7 @@ page {
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     letter-spacing: 0.5px;
     transition: all 0.3s ease;
-    
+
     &:active {
       transform: scale(0.98);
       opacity: 0.8;
@@ -196,7 +195,7 @@ page {
 }
 
 .case-header {
-  margin: 12px;
+  margin: 8px;
 
   .tabs {
     display: flex;

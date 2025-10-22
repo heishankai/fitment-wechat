@@ -1,6 +1,5 @@
 <template>
   <view class="container">
-    <!-- <search-navbar :selectedTab="selectedTab" @updateSelectTab="updateSelectTab" /> -->
     <scroll-view
       enable-back-to-top
       refresher-enabled
@@ -11,10 +10,9 @@
       scroll-y
     >
       我的房子
-       <uni-icons custom-prefix="iconfont" type="icon-xiaoqu" color="#808080" size="100" />
+      <uni-icons custom-prefix="iconfont" type="icon-xiaoqu" color="#808080" size="100" />
     </scroll-view>
     <tabbar selected="2"></tabbar>
-    <custom-popup ref="subscribeModalRef" />
   </view>
 </template>
 
@@ -26,7 +24,6 @@ import { useGuessList } from '@/utils'
 // 组合式函数调用
 const { guessRef, onScrolltolower } = useGuessList()
 
-const subscribeModalRef = ref<any>()
 const isTriggered = ref(false)
 
 // 自定义下拉刷新被触发

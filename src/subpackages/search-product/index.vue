@@ -1,27 +1,24 @@
 <template>
   <view class="container">
-    <!-- 顶部自定义导航栏 -->
-    <custom-navbar />
-
     <!-- 搜索框 -->
-    <view class="search-section">
+    <view class="search-header">
       <view class="search-box">
         <uni-icons type="search" size="18" color="#999" />
         <input
           v-model="searchKeyword"
-          placeholder="搜索工种、服务内容..."
+          placeholder="搜索商品名称"
           class="search-input"
+          @confirm="onSearch"
           @input="onSearchInput"
+          confirm-type="search"
         />
         <view v-if="searchKeyword" class="clear-btn" @click="clearSearch">
           <uni-icons type="clear" size="16" color="#999" />
         </view>
       </view>
     </view>
-    <!-- 统计卡片 -->
-    <stats-card />
 
-    <!-- 工种列表 -->
+    <!-- 搜索结果 -->
     <scroll-view
       enable-back-to-top
       refresher-enabled
@@ -30,123 +27,124 @@
       @scrolltolower="onScrolltolower"
       class="scroll-view"
       scroll-y
+      :scroll-with-animation="true"
+      :enable-flex="true"
     >
-      <work-list ref="workListRef" />
+      <!-- 商品列表 -->
+      <product-list ref="productListRef" :search-keyword="searchKeyword" />
     </scroll-view>
-    <tabbar selected="1"></tabbar>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { debounce } from 'lodash-es'
-// components
-import tabbar from '@/components/custom-tab-bar.vue'
-import customNavbar from './components/custom-navbar.vue'
-import statsCard from './components/stats-card.vue'
-import workList from './components/work-list.vue'
-// 滚动到底部事件
-const onScrolltolower = (): void => {
-  workListRef.value?.getMore()
+import ProductList from './components/product-list.vue'
+
+// 搜索相关状态
+const searchKeyword = ref('')
+const isSearchMode = ref(false)
+const isTriggered = ref(false)
+const productListRef = ref<any>()
+
+// 执行搜索的函数
+const performSearch = async (): Promise<void> => {
+  if (productListRef.value) {
+    productListRef.value.resetProducts()
+    await productListRef.value.loadProducts()
+  }
 }
 
-const searchKeyword = ref('')
-const workListRef = ref<any>()
-
-// 当前下拉刷新状态
-const isTriggered = ref(false)
+// 防抖搜索函数
+const debouncedSearch = debounce(performSearch, 500)
 
 // 搜索输入处理
 const onSearchInput = (e: any): void => {
   const value = e.detail.value
   searchKeyword.value = value
-  
-  // 如果输入框为空，重置数据
+
+  // 如果输入框为空，退出搜索模式
   if (!value.trim()) {
-    workListRef.value?.resetData()
-    workListRef.value?.loadWorkList()
+    isSearchMode.value = false
+    productListRef.value?.resetProducts()
     return
   }
-  
+
+  // 输入时直接搜索
+  isSearchMode.value = true
+
   // 使用防抖搜索
   debouncedSearch()
 }
 
-// 防抖搜索函数
-const debouncedSearch = debounce(() => {
-  workListRef.value?.resetData()
-  workListRef.value?.loadWorkList(searchKeyword.value)
-}, 500)
+// 执行搜索
+const onSearch = async (): Promise<void> => {
+  isSearchMode.value = true
+
+  // 等待下一个tick确保组件状态更新
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  if (productListRef.value) {
+    productListRef.value.resetProducts()
+    await productListRef.value.loadProducts()
+  }
+}
 
 // 清空搜索
 const clearSearch = (): void => {
   searchKeyword.value = ''
-  workListRef.value?.resetData()
-  workListRef.value?.loadWorkList()
+  isSearchMode.value = false
+  productListRef.value?.resetProducts()
 }
 
-// 自定义下拉刷新被触发
+// 滚动触底事件
+const onScrolltolower = (): void => {
+  productListRef.value?.getMore()
+}
+
+// 下拉刷新
 const onRefresherrefresh = async (): Promise<void> => {
-  // 开始动画
   isTriggered.value = true
 
-  // 重置工种列表数据
-  workListRef.value?.resetData()
-  await workListRef.value?.loadWorkList()
+  if (productListRef.value) {
+    productListRef.value.resetProducts()
+    await productListRef.value.loadProducts()
+  }
 
-  // 关闭动画
   isTriggered.value = false
 }
-
-onLoad(() => {
-  // 页面加载时，工种列表组件会自动加载数据
-})
 </script>
 
 <style lang="scss">
-/* 主题色 */
-$primary-color: #00cec9;
-$text-primary: #333;
-$text-secondary: #666;
-$text-muted: #999;
-$bg-primary: #f8f9fa;
-$bg-card: #ffffff;
-$border-color: #e9ecef;
-
 page {
   height: 100%;
   overflow: hidden;
-  background: $bg-card;
 }
 
 .container {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: #f5f5f5;
 }
 
-.scroll-view {
-  flex: 1;
-  overflow: hidden;
-}
-
-/* 搜索框 */
-.search-section {
+.search-header {
   padding: 16px;
   background: #fff;
+  border-bottom: 1px solid #eee;
 
   .search-box {
     display: flex;
     align-items: center;
     background: #f5f5f5;
     border-radius: 20px;
-    padding: 12px 16px;
+    padding: 16px;
     gap: 8px;
 
     .search-input {
       flex: 1;
       font-size: 14px;
-      color: $text-primary;
+      color: #333;
       background: transparent;
       border: none;
       outline: none;
@@ -162,5 +160,10 @@ page {
       background: #ddd;
     }
   }
+}
+
+.scroll-view {
+  flex: 1;
+  overflow: hidden;
 }
 </style>
