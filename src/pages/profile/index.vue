@@ -140,14 +140,14 @@ const handleLogout = (): any => {
     success: (res) => {
       if (res.confirm) {
         // 清除用户信息
-        uni.removeStorageSync('userInfo')
+        wx.removeStorageSync('userInfo')
 
         // 跳转到登录页
-        uni.reLaunch({
+        wx.navigateTo({
           url: '/subpackages/login/index',
         })
 
-        uni.showToast({
+        wx.showToast({
           title: '已退出登录',
           icon: 'success',
         })

@@ -26,8 +26,8 @@
 
       <!-- 登录按钮区域 -->
       <view class="login-section">
-        <button class="login-btn" @click="handleLogin">
-          <text class="btn-text">微信一键登录</text>
+        <button class="login-btn" @getphonenumber="handlePhoneLogin" open-type="getPhoneNumber">
+          <text class="btn-text">一键登录</text>
           <text class="btn-icon">→</text>
         </button>
       </view>
@@ -36,27 +36,50 @@
 </template>
 
 <script setup lang="ts">
-import { loginService } from './service'
-// 一键登录
-const handleLogin = async (): Promise<void> => {
-  wx.showLoading({ title: '登录中', mask: true })
+import { loginService, getUserPhoneNumberService } from './service'
 
-  // 调用 uni.login 获取登录凭证
-  const { code } = await new Promise<{ code: string }>((resolve, reject) => {
-    wx.login({
-      success: (res) => resolve(res),
-      fail: (err) => reject(err),
-    })
-  })
+// 登录
+const handlePhoneLogin = async (e: any): Promise<void> => {
+  const { code: phoneCode, errMsg } = e?.detail ?? {}
 
-  const { success, data } = await loginService({ code })
-
-  if (success) {
-    wx.setStorageSync('userInfo', data)
+  if (errMsg !== 'getPhoneNumber:ok') {
+    wx.showToast({ title: '需要手机号授权才能登录', icon: 'none' })
+    return
   }
 
-  wx.hideLoading()
-  wx.navigateBack({ delta: 1 })
+  wx.showLoading({ title: '登录中...', mask: true })
+
+  try {
+    // 先获取登录凭证
+    const { code } = await new Promise<{ code: string }>((resolve, reject) => {
+      wx.login({
+        success: (res) => resolve(res),
+        fail: (err) => reject(err),
+      })
+    })
+
+    // 调用后端接口登录 获取用户信息
+    const { success, data } = await loginService({ code })
+
+    if (!success) return
+
+    // 调用后端接口解密手机号
+    const { success: phoneSuccess, data: phoneData } = await getUserPhoneNumberService({
+      code: phoneCode,
+      openid: data.openid,
+    })
+
+    if (!phoneSuccess) return
+
+    console.log('用户登录信息', phoneData)
+
+    wx.setStorageSync('userInfo', phoneData)
+    wx.navigateBack()
+  } catch (error) {
+    console.error('登录失败:', error)
+  } finally {
+    wx.hideLoading()
+  }
 }
 </script>
 

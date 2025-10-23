@@ -13,10 +13,23 @@
           <view class="service-tag secondary" v-if="work.work_title === '工长'">项目管理</view>
         </view>
 
-        <!-- 服务内容 -->
-        <view class="service-content">
-          <view class="service-title">{{ work.work_title }}服务·{{ work.area_scope }}</view>
-          <view class="service-desc">{{ work.pricing_description }}</view>
+        <!-- 服务内容区域 -->
+        <view class="service-content-wrapper">
+          <!-- 工种头像展示 -->
+          <view class="work-avatar" v-if="work.display_images?.[0]">
+            <image
+              :src="work.display_images[0]"
+              mode="aspectFill"
+              class="avatar-image"
+              @click.stop="previewImage(work.display_images[0], work.display_images)"
+            />
+          </view>
+
+          <!-- 服务内容 -->
+          <view class="service-content">
+            <view class="service-title">{{ work.work_title }}服务·{{ work.area_scope }}</view>
+            <view class="service-desc">{{ work.pricing_description }}</view>
+          </view>
         </view>
 
         <!-- 价格和操作 -->
@@ -134,6 +147,14 @@ const navigateToDetail = (work: WorkItem): void => {
   })
 }
 
+// 预览图片
+const previewImage = (current: string, urls: string[]): void => {
+  wx.previewImage({
+    current,
+    urls,
+  })
+}
+
 // 暴露方法
 defineExpose({
   loadWorkList,
@@ -158,7 +179,7 @@ $text-muted: #999;
   min-height: 100vh;
 
   .service-list {
-    padding: 20px;
+    padding: 16px;
 
     .service-card {
       background: #fff;
@@ -195,26 +216,51 @@ $text-muted: #999;
         }
       }
 
-      .service-content {
+      .service-content-wrapper {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
         margin-bottom: 16px;
 
-        .service-title {
-          font-size: 16px;
-          font-weight: 600;
-          color: $text-primary;
-          line-height: 1.4;
-          margin-bottom: 8px;
+        .work-avatar {
+          flex-shrink: 0;
+
+          .avatar-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+
+            &:active {
+              transform: scale(0.95);
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+          }
         }
 
-        .service-desc {
-          font-size: 14px;
-          color: $text-secondary;
-          line-height: 1.5;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+        .service-content {
+          flex: 1;
+          margin-bottom: 0;
+
+          .service-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: $text-primary;
+            line-height: 1.4;
+            margin-bottom: 8px;
+          }
+
+          .service-desc {
+            font-size: 14px;
+            color: $text-secondary;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
         }
       }
 
