@@ -17,11 +17,13 @@
         <view class="case-desc">{{ item?.city_name }} · {{ item?.square_number }}m²</view>
       </view>
     </view>
+    <empty-state v-if="!caseList?.length" />
   </view>
 </template>
 
 <script setup lang="ts">
 import { getCaseListService } from '../service'
+import emptyState from '@/components/empty-state.vue'
 
 const allCaseList = ref<any[]>([]) // 存储所有数据
 const finish = ref(false)
@@ -104,7 +106,6 @@ onLoad(() => {
 <style lang="scss">
 .case-list {
   padding: 8px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 
   .case-item {
     background: #fff;
