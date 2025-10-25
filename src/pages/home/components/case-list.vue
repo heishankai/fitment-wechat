@@ -21,24 +21,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
 import { getCaseListService } from '../service'
 
-// 接收父组件传递的城市信息
-interface Props {
-  selectedCity: string
-}
-
-const props = defineProps<Props>()
-
-// 响应式数据
 const allCaseList = ref<any[]>([]) // 存储所有数据
 const finish = ref(false)
 const currentFilter = ref<number | null>(null)
 
-const pageParams = ref<{ pageIndex: number; pageSize: number }>({
+const pageParams = ref<{ pageIndex: number; pageSize: number; city_name: string }>({
   pageIndex: 1,
   pageSize: 10,
+  city_name: '',
 })
 
 // 计算属性 - 筛选后的数据
@@ -46,43 +38,41 @@ const caseList = computed(() => {
   if (currentFilter.value === null) {
     return allCaseList.value
   }
-  return allCaseList.value?.filter((item) => item?.remodel_type === currentFilter?.value)
+  return allCaseList.value.filter((item) => item?.remodel_type === currentFilter.value)
 })
 
 // 获取案例列表数据
-const loadCaseData = async (): Promise<void> => {
-  console.log('loadCaseData 被调用', { finish: finish.value, pageIndex: pageParams.value.pageIndex })
-  
-  if (finish.value) {
-    if (finish.value) {
-      uni.showToast({ icon: 'none', title: '没有更多数据~' })
-    }
+const getHomeGetRecommendData = async (): Promise<void> => {
+  // 退出分页判断
+  if (finish.value === true) {
+    wx.showToast({ icon: 'none', title: '没有更多数据~' })
     return
   }
 
-  // 构建请求参数，包含城市信息
-  const params = {
-    ...pageParams.value,
-    city_name: props.selectedCity || '杭州', // 默认城市
+  wx.showLoading({ title: '加载中...', mask: true })
+
+  const city_name = wx.getStorageSync('selectedCity')?.city_name ?? '杭州市'
+
+  const { data } = await getCaseListService({ ...pageParams.value, city_name })
+
+  // 数组追加到全部数据中
+  allCaseList.value.push(...(data ?? []))
+
+  // 分页条件
+  if (pageParams.value.pageIndex) {
+    // 页码累加
+    pageParams.value.pageIndex++
   }
 
-  console.log('请求参数:', params)
-  const { success, data } = await getCaseListService(params)
-
-  if (success && data?.length) {
-    // 存储到全部数据中
-    allCaseList.value.push(...data)
-
-    // 更新分页参数
-    pageParams.value.pageIndex++
-
-    // 检查是否还有更多数据
-    if (data.length < pageParams.value.pageSize) {
-      finish.value = true
-    }
-  } else {
+  if (!data?.data?.length) {
     finish.value = true
   }
+  wx.hideLoading()
+}
+
+// 切换筛选条件
+const switchFilter = (remodelType: number | null): void => {
+  currentFilter.value = remodelType
 }
 
 // 重置数据
@@ -92,11 +82,6 @@ const resetData = (): void => {
   finish.value = false
 }
 
-// 切换筛选条件
-const switchFilter = (remodelType: number | null): void => {
-  currentFilter.value = remodelType
-}
-
 // 跳转案例详情
 const navigateToCaseDetail = (id: number): void => {
   wx.navigateTo({
@@ -104,26 +89,15 @@ const navigateToCaseDetail = (id: number): void => {
   })
 }
 
-// 监听城市变化，重新加载数据
-watch(
-  () => props.selectedCity,
-  (newCity, oldCity) => {
-    console.log('城市监听触发:', { newCity, oldCity, immediate: oldCity === undefined })
-    if (newCity && newCity !== oldCity) {
-      console.log('城市变化:', oldCity, '->', newCity)
-      resetData()
-      loadCaseData()
-    }
-  },
-  // 立即执行，处理初始化
-  { immediate: true },
-)
-
 // 暴露方法
 defineExpose({
   resetData,
-  getMore: loadCaseData,
+  getMore: getHomeGetRecommendData,
   switchFilter,
+})
+
+onLoad(() => {
+  getHomeGetRecommendData()
 })
 </script>
 

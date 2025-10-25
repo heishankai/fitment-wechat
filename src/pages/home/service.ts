@@ -3,7 +3,11 @@ import { request } from '@/utils/request'
 /**
  * 装修案例列表
  */
-export const getCaseListService = (params: any): Promise<any> => {
+export const getCaseListService = (params: {
+  pageIndex: number
+  pageSize: number
+  city_name?: string
+}): Promise<any> => {
   return request({
     method: 'POST',
     url: '/case-query/page',
