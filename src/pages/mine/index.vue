@@ -27,8 +27,9 @@ onShow(() => {
 const loadUserInfo = (): void => {
   const data = wx.getStorageSync('userInfo')
   if (data) {
-    userInfo.value = data
+    userInfo.value = { ...data }
   }
+
   console.log(data, 'userInfo')
 }
 </script>

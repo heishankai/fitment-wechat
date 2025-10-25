@@ -95,7 +95,8 @@
           "path": "login/index",
           "style": {
             "navigationBarTitleText": "登录",
-            "disableScroll": true
+            "disableScroll": true,
+            "navigationStyle": "custom"
           }
         },
         {

@@ -1,7 +1,8 @@
 export const BASEURL = 'http://127.0.0.1:3000' // 本地地址
 // export const BASEURL = 'https://www.1shaoyan.com' // 线上地址
 
-export const uploadFileUrl = BASEURL + '/api/admin/uploadFile'
+// 上传文件地址
+export const uploadFileUrl = BASEURL + '/upload'
 
 type Data<T> = {
   code: string
@@ -75,6 +76,39 @@ export const request = <T>(options: UniApp.RequestOptions): Promise<Data<T>> => 
         uni.hideLoading()
         uni.showToast({ icon: 'none', title: '网络错误，换个网络试试' })
         reject(err)
+      },
+    })
+  })
+}
+
+/**
+ * 上传文件服务
+ */
+export const uploadFileService = (filePath: string): Promise<{ success: boolean; data?: any }> => {
+  return new Promise((resolve) => {
+    wx.uploadFile({
+      url: uploadFileUrl,
+      filePath,
+      name: 'file',
+      success: (res) => {
+        try {
+          wx.showLoading({ title: '上传中...' })
+          const { success, data } = JSON.parse(res?.data)
+          if (!success) {
+            wx.hideLoading()
+            uni.showToast({ title: '上传失败', icon: 'none' })
+            resolve({ success: false, data: null })
+            return
+          }
+
+          wx.hideLoading()
+          resolve({ success: true, data: data })
+          
+        } catch {
+          wx.hideLoading()
+          uni.showToast({ title: '上传失败', icon: 'none' })
+          resolve({ success: false, data: null })
+        }
       },
     })
   })
