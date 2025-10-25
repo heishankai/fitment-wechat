@@ -2,11 +2,7 @@
   <view class="navbar" :style="{ paddingTop: safeArea.top + 'px' }">
     <view class="content">
       <view class="icon">
-        <uni-icons custom-prefix="iconfont" type="icon-weixiu" size="40" color="#fff" />
-      </view>
-      <view class="text">
-        <text class="title">工种工价</text>
-        <text class="subtitle">透明报价·专业施工</text>
+        <uni-icons type="notification" size="30" color="#fff" />
       </view>
     </view>
   </view>
@@ -39,23 +35,6 @@ $secondary: #00b4d8;
       align-items: center;
       justify-content: center;
       backdrop-filter: blur(10px);
-    }
-
-    .text {
-      .title {
-        display: block;
-        font-size: 18px;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 2px;
-        line-height: 1.2;
-      }
-
-      .subtitle {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.85);
-        line-height: 1.2;
-      }
     }
   }
 }

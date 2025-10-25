@@ -73,7 +73,7 @@ const tabList = ref([
   },
   {
     selected: '4',
-    pagePath: '/pages/profile/index',
+    pagePath: '/pages/mine/index',
     text: '我的',
     iconPath: '/static/tabbar/profile.png',
     selectedIconPath: '/static/tabbar/profile_selected.png',
