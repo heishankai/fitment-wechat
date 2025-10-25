@@ -161,6 +161,13 @@
             "navigationBarTitleText": "联系客服",
             "disableScroll": true
           }
+        },
+        {
+          "path": "address-form/index",
+          "style": {
+            "navigationBarTitleText": "新增地址",
+            "disableScroll": true
+          }
         }
       ]
     }

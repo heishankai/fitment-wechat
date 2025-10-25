@@ -66,7 +66,7 @@ const getHomeGetRecommendData = async (): Promise<void> => {
     pageParams.value.pageIndex++
   }
 
-  if (!data?.data?.length) {
+  if (!data?.length) {
     finish.value = true
   }
   wx.hideLoading()
