@@ -57,10 +57,7 @@
       </view>
 
       <!-- 空数据状态 -->
-      <view v-if="!loading && workList.length === 0" class="empty-state">
-        <uni-icons type="shop" size="60" color="#ccc" />
-        <text>暂无工种数据</text>
-      </view>
+      <empty-state v-if="!workList?.length" />
     </view>
   </view>
 </template>
@@ -68,6 +65,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getPriceListService } from '../service'
+import emptyState from '@/components/empty-state.vue'
 
 // 类型定义
 interface WorkItem {
