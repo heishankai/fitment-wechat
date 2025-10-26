@@ -143,18 +143,11 @@ page {
     gap: 2px;
     display: flex;
     align-items: center;
-    height: 44px; /* 与微信胶囊按钮高度保持一致 */
+    height: 44px;
     line-height: 44px;
     font-size: 16px;
     font-weight: 600;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-
-    &:active {
-      transform: scale(0.98);
-      opacity: 0.8;
-    }
   }
 }
 

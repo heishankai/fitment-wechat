@@ -25,7 +25,8 @@
     {
       "path": "pages/house/index",
       "style": {
-        "navigationBarTitleText": "我的房子"
+        "navigationBarTitleText": "我的房子",
+        "navigationStyle": "custom"
       }
     },
     {

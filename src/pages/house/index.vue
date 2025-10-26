@@ -1,16 +1,13 @@
 <template>
   <view class="container">
-    <scroll-view
-      enable-back-to-top
-      refresher-enabled
-      @refresherrefresh="onRefresherrefresh"
-      :refresher-triggered="isTriggered"
-      @scrolltolower="onScrolltolower"
-      class="scroll-view"
-      scroll-y
-    >
-      我的房子
-      <uni-icons custom-prefix="iconfont" type="icon-xiaoqu" color="#808080" size="100" />
+    <!-- 可滚动的内容区域 -->
+    <scroll-view class="scroll-view" scroll-y @scroll="onScroll">
+      <!-- 轮播图 -->
+      <swiper-header ref="swiperHeaderRef" />
+      <!-- 计算价格 -->
+      <calculate-price />
+      <!-- 推荐案例 -->
+      <view class="house-content"> 推荐案例 </view>
     </scroll-view>
     <tabbar selected="2"></tabbar>
   </view>
@@ -19,25 +16,16 @@
 <script setup lang="ts">
 // components
 import tabbar from '@/components/custom-tab-bar.vue'
-import { useGuessList } from '@/utils'
+import swiperHeader from './components/swiper-header.vue'
+import calculatePrice from './components/calculate-price.vue'
 
-// 组合式函数调用
-const { guessRef, onScrolltolower } = useGuessList()
+// 获取 swiper-header 组件的引用
+const swiperHeaderRef = ref()
 
-const isTriggered = ref(false)
-
-// 自定义下拉刷新被触发
-const onRefresherrefresh = async (): Promise<void> => {
-  // 开始动画
-  isTriggered.value = true
-
-  // 加载数据
-  guessRef.value?.resetData()
-
-  await guessRef.value?.getMore()
-
-  // 关闭动画
-  isTriggered.value = false
+// 处理滚动事件
+const onScroll = (e: any): void => {
+  // 将滚动事件传递给 swiper-header 组件
+  swiperHeaderRef.value?.handleScroll(e)
 }
 </script>
 
@@ -45,11 +33,10 @@ const onRefresherrefresh = async (): Promise<void> => {
 page {
   height: 100%;
   overflow: hidden;
-  background: linear-gradient(to bottom, #f0faf9, #b3e5dc, #b3e5dc);
 }
 
 .container {
-  height: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -57,5 +44,11 @@ page {
 .scroll-view {
   flex: 1;
   overflow: hidden;
+}
+
+.house-content {
+  padding: 16rpx;
+  background-color: #f8f9fa;
+  min-height: 200px;
 }
 </style>

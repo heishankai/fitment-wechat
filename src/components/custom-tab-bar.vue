@@ -94,6 +94,8 @@ const switchTab = (item): void => {
   align-items: center;
   background-color: #ffffff;
   padding: 10rpx 10rpx env(safe-area-inset-bottom) 10rpx;
+  position: relative;
+  z-index: 50;
 }
 
 .tab-bar-item {
@@ -118,7 +120,7 @@ const switchTab = (item): void => {
 /* 中间的 tab 设置为圆形并上浮，同时增加白色外边框 */
 .tab-bar-item.center {
   flex: none; /* 取消父级的 flex: 1 影响 */
-  z-index: 9999;
+  z-index: 100;
   margin-top: -50rpx; /* 上浮效果 */
   width: 100rpx;
   height: 100rpx;

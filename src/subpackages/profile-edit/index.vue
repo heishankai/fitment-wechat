@@ -91,7 +91,7 @@ const loadUserInfo = (): void => {
 const handleAvatarEdit = (): void => {
   wx.chooseImage({
     count: 1,
-    sizeType: ['compressed'], // 使用压缩图
+    sizeType: ['original'], // 不压缩
     sourceType: ['album', 'camera'], // // 相册+拍照
     success: async (res) => {
       const { success, data } = await uploadFileService(res.tempFilePaths[0])
