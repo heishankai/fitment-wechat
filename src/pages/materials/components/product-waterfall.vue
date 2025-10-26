@@ -26,15 +26,13 @@
   </view>
 
   <!-- 空数据状态 -->
-  <view class="empty-state" v-if="!loading && products.length === 0">
-    <uni-icons type="shop" size="60" color="#ccc" />
-    <text>暂无商品</text>
-  </view>
+  <empty-state v-if="!products?.length" />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { getCommodityListService } from '../service'
+import emptyState from '@/components/empty-state.vue'
 
 // 类型定义
 interface Product {
@@ -65,7 +63,6 @@ const props = defineProps<Props>()
 
 // 响应式数据
 const products = ref<Product[]>([])
-const loading = ref(false)
 const finish = ref(false)
 const pageParams = ref<PageParams>({
   pageIndex: 1,
@@ -127,25 +124,16 @@ const waterfallColumns = computed(() => {
 
 // 加载商品数据
 const loadProducts = async (): Promise<void> => {
-  if (finish.value || loading.value) {
-    if (finish.value) {
-      uni.showToast({
-        icon: 'none',
-        title: '没有更多数据~',
-        duration: 1500,
-      })
-    }
+  if (finish.value) {
+    uni.showToast({ icon: 'none', title: '没有更多数据~' })
     return
   }
-
-  loading.value = true
 
   const params = {
     ...pageParams.value,
     category_id: props.selectedCategory || null,
   }
 
-  console.log('请求商品数据参数:', params)
   const { data, success } = await getCommodityListService(params)
 
   if (!success) {
@@ -162,8 +150,6 @@ const loadProducts = async (): Promise<void> => {
 
   products.value.push(...newData)
   pageParams.value.pageIndex++
-
-  loading.value = false
 }
 
 // 重置商品数据
@@ -171,7 +157,6 @@ const resetProducts = (): void => {
   pageParams.value.pageIndex = 1
   products.value = []
   finish.value = false
-  loading.value = false
 }
 
 // 跳转商品详情
@@ -201,8 +186,9 @@ defineExpose({
   getMore: loadProducts,
 })
 
-// 初始化加载
-loadProducts()
+onLoad(() => {
+  loadProducts()
+})
 </script>
 
 <style lang="scss">
@@ -303,16 +289,5 @@ $primary-color: #00cec9;
   padding: 20px;
   color: #999;
   font-size: 14px;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  color: #ccc;
-  font-size: 16px;
-  gap: 12px;
 }
 </style>
