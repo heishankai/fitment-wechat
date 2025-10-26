@@ -19,6 +19,7 @@
       scroll-y
       :scroll-with-animation="true"
       :enable-flex="true"
+      @scroll="onScroll"
     >
       <case-list
         ref="guessRef"
@@ -27,6 +28,7 @@
         :city_name="city_name"
       />
     </scroll-view>
+    <contact-service :scrollTop="scrollTop" />
     <tabbar selected="0"></tabbar>
   </view>
 </template>
@@ -36,6 +38,7 @@
 import tabbar from '@/components/custom-tab-bar.vue'
 import caseList from './components/case-list.vue'
 import caseTabs from './components/tabs.vue'
+import contactService from '@/components/contact-service.vue'
 // utils
 import { useGuessList } from '@/utils'
 
@@ -49,6 +52,7 @@ const { guessRef, onScrolltolower } = useGuessList()
 const isTriggered = ref(false)
 const activeTab = ref('0')
 const city_name = ref('')
+const scrollTop = ref<number>(0)
 
 // 加载城市信息
 const loadCity = (): void => {
@@ -60,6 +64,11 @@ const handleTabSwitch = (tabIndex: string, remodelType: number | null): void => 
   activeTab.value = tabIndex
   // 通知 case-list 组件进行筛选
   guessRef.value?.switchFilter(remodelType)
+}
+
+// 处理滚动事件
+const onScroll = (e: any): void => {
+  scrollTop.value = e.detail.scrollTop
 }
 
 // 自定义下拉刷新被触发

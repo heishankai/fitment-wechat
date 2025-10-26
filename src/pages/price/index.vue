@@ -30,9 +30,11 @@
       @scrolltolower="onScrolltolower"
       class="scroll-view"
       scroll-y
+      @scroll="onScroll"
     >
       <work-list ref="workListRef" />
     </scroll-view>
+    <contact-service :scrollTop="scrollTop"/>
     <tabbar selected="1"></tabbar>
   </view>
 </template>
@@ -45,6 +47,7 @@ import tabbar from '@/components/custom-tab-bar.vue'
 import customNavbar from './components/custom-navbar.vue'
 import statsCard from './components/stats-card.vue'
 import workList from './components/work-list.vue'
+import contactService from '@/components/contact-service.vue'
 // 滚动到底部事件
 const onScrolltolower = (): void => {
   workListRef.value?.getMore()
@@ -52,7 +55,7 @@ const onScrolltolower = (): void => {
 
 const searchKeyword = ref('')
 const workListRef = ref<any>()
-
+const scrollTop = ref<number>(0)
 // 当前下拉刷新状态
 const isTriggered = ref(false)
 
@@ -96,6 +99,11 @@ const onRefresherrefresh = async (): Promise<void> => {
 
   // 关闭动画
   isTriggered.value = false
+}
+
+// 处理滚动事件
+const onScroll = (e: any): void => {
+  scrollTop.value = e.detail.scrollTop
 }
 
 onLoad(() => {

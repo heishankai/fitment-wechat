@@ -21,6 +21,7 @@
       scroll-y
       :scroll-with-animation="true"
       :enable-flex="true"
+      @scroll="onScroll"
     >
       <!-- 商品瀑布流组件 -->
       <product-waterfall
@@ -29,6 +30,7 @@
         @content-transitioning="onContentTransitioning"
       />
     </scroll-view>
+    <contact-service :scrollTop="scrollTop"/>
     <tabbar selected="3"></tabbar>
   </view>
 </template>
@@ -39,7 +41,7 @@ import { ref } from 'vue'
 import tabbar from '@/components/custom-tab-bar.vue'
 import categorySelector from './components/category-selector.vue'
 import productWaterfall from './components/product-waterfall.vue'
-
+import contactService from '@/components/contact-service.vue'
 // 类型定义
 interface CategorySelectorRef {
   loadCategories: () => Promise<void>
@@ -56,6 +58,7 @@ interface ProductWaterfallRef {
 const isTriggered = ref(false)
 const isContentTransitioning = ref(false)
 const selectedCategory = ref<number | null>(null)
+const scrollTop = ref<number>(0)
 
 // 组件引用
 const categorySelectorRef = ref<CategorySelectorRef>()
@@ -91,6 +94,11 @@ const onRefresherrefresh = async (): Promise<void> => {
 // 滚动到底部
 const onScrolltolower = (): void => {
   productWaterfallRef.value?.getMore()
+}
+
+// 处理滚动事件
+const onScroll = (e: any): void => {
+  scrollTop.value = e.detail.scrollTop
 }
 </script>
 

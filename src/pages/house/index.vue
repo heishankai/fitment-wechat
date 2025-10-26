@@ -10,6 +10,7 @@
       <view class="section-title">推荐案例</view>
       <case-list ref="caseListRef" />
     </scroll-view>
+    <contact-service :scrollTop="scrollTop"/>
     <tabbar selected="2"></tabbar>
   </view>
 </template>
@@ -20,15 +21,18 @@ import tabbar from '@/components/custom-tab-bar.vue'
 import swiperHeader from './components/swiper-header.vue'
 import calculatePrice from './components/calculate-price.vue'
 import caseList from './components/case-list.vue'
+import contactService from '@/components/contact-service.vue'
 
 // 获取组件的引用
 const swiperHeaderRef = ref()
 const caseListRef = ref()
+const scrollTop = ref<number>(0)
 
 // 处理滚动事件
 const onScroll = (e: any): void => {
   // 将滚动事件传递给 swiper-header 组件
   swiperHeaderRef.value?.handleScroll(e)
+  scrollTop.value = e.detail.scrollTop
 }
 
 // 处理滚动到底部
