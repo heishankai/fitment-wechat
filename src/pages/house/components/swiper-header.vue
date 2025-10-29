@@ -51,6 +51,7 @@
 
 <script setup lang="ts">
 import { previewImage } from '@/utils'
+import { getSwiperListService } from '../service'
 
 // 获取屏幕边界到安全区域距离
 const { safeArea } = wx.getSystemInfoSync()
@@ -58,11 +59,7 @@ const { safeArea } = wx.getSystemInfoSync()
 const current = ref(0)
 const city_name = ref('杭州市')
 const isScrolled = ref(false)
-const swiperList = ref([
-  'https://din-dang-zhi-zhuang.oss-cn-hangzhou.aliyuncs.com/uploads/1761400451663_fftrq5_DyizCwLSzUmZ4997263b4aa81bef19a14dffccff1587.png',
-  'https://din-dang-zhi-zhuang.oss-cn-hangzhou.aliyuncs.com/uploads/1761400474176_lox43t_CXPFQu8evhwUb5e0942ed9f1a1f583206eb02e7880f4.png',
-  'https://din-dang-zhi-zhuang.oss-cn-hangzhou.aliyuncs.com/uploads/1761400488042_f5k6zf_rPQgwS3qQe3z93f8db9e1adc88f8f2c7e4c31341484a.png',
-])
+const swiperList = ref([])
 
 // 监听页面滚动
 const handleScroll = (e: any): void => {
@@ -94,6 +91,17 @@ const handlePreviewCarouselImage = (index: number): void => {
     swiperList.value.map((item: string) => item),
   )
 }
+
+// 加载轮播图
+const loadSwiperList = async (): Promise<void> => {
+  const { success, data } = await getSwiperListService()
+  if (!success) return
+  swiperList.value = data?.swiper_image || []
+}
+
+onLoad(() => {
+  loadSwiperList()
+})
 
 onShow(() => {
   loadCity()

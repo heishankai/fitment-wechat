@@ -13,3 +13,13 @@ export const getCaseListService = (params: {
     data: params,
   })
 }
+
+/**
+ * 获取轮播图
+ */
+export const getSwiperListService = (): Promise<any> => {
+  return request({
+    method: 'GET',
+    url: '/swiper-config',
+  })
+}
