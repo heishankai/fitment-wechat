@@ -40,9 +40,16 @@
         class="service-detail-item"
         v-for="(item, index) in workTypeDetail?.service_details"
         :key="index"
-        @click="previewImage(item, workTypeDetail?.service_details)"
       >
-        <image :src="item" mode="aspectFill" class="service-detail-image" />
+        <image 
+          :src="item.service_image" 
+          mode="aspectFill" 
+          class="service-detail-image"
+          @click="handlePreviewImage(item.service_image)"
+        />
+        <view class="service-detail-desc" v-if="item.service_desc">
+          {{ item.service_desc }}
+        </view>
       </view>
     </custom-card>
   </view>
@@ -54,7 +61,12 @@ import sectionHeader from '@/components/section-header.vue'
 import { previewImage } from '@/utils'
 
 const props = defineProps<{ workTypeDetail: Record<string, any> }>()
-console.log(props.workTypeDetail, '1212121')
+
+const handlePreviewImage = (currentImage: string): void => {
+  const serviceDetails = props.workTypeDetail?.service_details || []
+  const imageUrls = serviceDetails.map((item: any) => item.service_image || item).filter(Boolean)
+  previewImage(currentImage, imageUrls)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -79,10 +91,12 @@ console.log(props.workTypeDetail, '1212121')
 }
 
 .service-detail-item {
-  aspect-ratio: 1;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 16px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 
   &:last-child {
     margin-bottom: 0;
@@ -90,7 +104,20 @@ console.log(props.workTypeDetail, '1212121')
 
   .service-detail-image {
     width: 100%;
-    height: 100%;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid #f5f5f5;
+  }
+
+  .service-detail-desc {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #333;
+    padding: 0;
+    word-break: break-all;
+    position: relative;
   }
 }
 
