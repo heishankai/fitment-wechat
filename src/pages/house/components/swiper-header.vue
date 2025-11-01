@@ -6,7 +6,7 @@
       :style="{ paddingTop: safeArea.top + 'px' }"
     >
       <view class="navbar-content">
-        <view class="address">
+        <view class="address" @click="navigateToCityList">
           <view class="icon-wrapper" :class="{ 'icon-dark': isScrolled }">
             <uni-icons type="location" :color="isScrolled ? '#333' : '#fff'" size="18" />
           </view>
@@ -97,6 +97,13 @@ const loadSwiperList = async (): Promise<void> => {
   const { success, data } = await getSwiperListService()
   if (!success) return
   swiperList.value = data?.swiper_image || []
+}
+
+// 跳转城市选择页面
+const navigateToCityList = (): void => {
+  wx.navigateTo({
+    url: '/subpackages/city-list/index',
+  })
 }
 
 onLoad(() => {

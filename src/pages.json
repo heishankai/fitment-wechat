@@ -6,12 +6,19 @@
     }
   },
   "pages": [
+    // {
+    //   "path": "pages/home/index",
+    //   "style": {
+    //     "navigationBarTitleText": "首页",
+    //     "navigationStyle": "custom",
+    //     "disableScroll": true
+    //   }
+    // },
     {
-      "path": "pages/home/index",
+      "path": "pages/house/index",
       "style": {
         "navigationBarTitleText": "首页",
-        "navigationStyle": "custom",
-        "disableScroll": true
+        "navigationStyle": "custom"
       }
     },
     {
@@ -20,13 +27,6 @@
         "navigationBarTitleText": "工种",
         "navigationStyle": "custom",
         "disableScroll": true
-      }
-    },
-    {
-      "path": "pages/house/index",
-      "style": {
-        "navigationBarTitleText": "我的房子",
-        "navigationStyle": "custom"
       }
     },
     {
@@ -50,29 +50,29 @@
     "backgroundColor": "#F8F8F8"
   },
   "tabBar": {
-    "custom": true,
+    // "custom": true,
     "color": "#999999",
     "selectedColor": "#00cec9",
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [
+      // {
+      //   "pagePath": "pages/home/index",
+      //   "iconPath": "static/tabbar/home.png",
+      //   "selectedIconPath": "static/tabbar/home_selected.png",
+      //   "text": "首页"
+      // },
       {
-        "pagePath": "pages/home/index",
+        "pagePath": "pages/house/index",
         "iconPath": "static/tabbar/home.png",
-        "selectedIconPath": "static/tabbar/home_selected.png",
-        "text": "首页"
+        "selectedIconPath": "static/tabbar/house_selected.png",
+        "text": "我的房子"
       },
       {
         "pagePath": "pages/price/index",
         "iconPath": "static/tabbar/price.png",
         "selectedIconPath": "static/tabbar/price_selected.png",
         "text": "工种"
-      },
-      {
-        "pagePath": "pages/house/index",
-        "iconPath": "static/tabbar/house.png",
-        "selectedIconPath": "static/tabbar/house_selected.png",
-        "text": "我的房子"
       },
       {
         "pagePath": "pages/materials/index",

@@ -6,6 +6,7 @@
       :show-scrollbar="false"
       scroll-y
       class="scroll-view"
+      @scroll="onScroll"
     >
       <!-- 商品轮播图 -->
       <view class="product-carousel">
@@ -24,11 +25,12 @@
       <view class="divider-view"></view>
 
       <content-area :workTypeDetail="workTypeDetail" />
-
     </scroll-view>
+    <contact-service :scrollTop="scrollTop" />
+
     <!-- 底部咨询按钮 -->
     <view class="footer">
-      <button class="consult-btn" @click="handleConsult">立即咨询</button>
+      <button class="consult-btn" @click="handleConsult">联系工匠</button>
     </view>
   </view>
 </template>
@@ -38,8 +40,10 @@ import { onLoad } from '@dcloudio/uni-app'
 import { previewImage } from '@/utils'
 import { getWorkTypeDetailService } from './service'
 import contentArea from './components/content-area.vue'
+import contactService from '@/components/contact-service.vue'
 
 const workTypeDetail = ref<any>(null)
+const scrollTop = ref<number>()
 
 onLoad((options) => {
   const { id } = options ?? {}
@@ -54,6 +58,11 @@ const loadWorkTypeDetail = async (id: string): Promise<void> => {
     workTypeDetail.value = data
     console.log('工种详情加载成功:', data)
   }
+}
+
+// 处理滚动事件
+const onScroll = (e: any): void => {
+  scrollTop.value = e.detail.scrollTop
 }
 
 // 处理咨询
@@ -83,8 +92,6 @@ page {
   overflow: hidden;
   box-sizing: border-box;
 }
-
-
 
 .divider-view {
   height: 16px;

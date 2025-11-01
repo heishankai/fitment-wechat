@@ -88,7 +88,7 @@ watch(
 .contact-service {
   position: fixed;
   right: 24rpx;
-  bottom: calc(8vh + env(safe-area-inset-bottom));
+  bottom: calc(2.5vh + env(safe-area-inset-bottom));
   z-index: 999;
 }
 

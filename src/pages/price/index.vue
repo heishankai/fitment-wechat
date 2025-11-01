@@ -34,8 +34,8 @@
     >
       <work-list ref="workListRef" />
     </scroll-view>
-    <contact-service :scrollTop="scrollTop"/>
-    <tabbar selected="1"></tabbar>
+    <contact-service :scrollTop="scrollTop" />
+    <!-- <tabbar selected="1"></tabbar> -->
   </view>
 </template>
 
@@ -43,7 +43,7 @@
 import { ref } from 'vue'
 import { debounce } from 'lodash-es'
 // components
-import tabbar from '@/components/custom-tab-bar.vue'
+// import tabbar from '@/components/custom-tab-bar.vue'
 import customNavbar from './components/custom-navbar.vue'
 import statsCard from './components/stats-card.vue'
 import workList from './components/work-list.vue'
@@ -63,14 +63,14 @@ const isTriggered = ref(false)
 const onSearchInput = (e: any): void => {
   const value = e.detail.value
   searchKeyword.value = value
-  
+
   // 如果输入框为空，重置数据
   if (!value.trim()) {
     workListRef.value?.resetData()
     workListRef.value?.loadWorkList()
     return
   }
-  
+
   // 使用防抖搜索
   debouncedSearch()
 }

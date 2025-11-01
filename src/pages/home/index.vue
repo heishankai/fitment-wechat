@@ -29,13 +29,13 @@
       />
     </scroll-view>
     <contact-service :scrollTop="scrollTop" />
-    <tabbar selected="0"></tabbar>
+    <!-- <tabbar selected="0"></tabbar> -->
   </view>
 </template>
 
 <script setup lang="ts">
 // components
-import tabbar from '@/components/custom-tab-bar.vue'
+// import tabbar from '@/components/custom-tab-bar.vue'
 import caseList from './components/case-list.vue'
 import caseTabs from './components/tabs.vue'
 import contactService from '@/components/contact-service.vue'

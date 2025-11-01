@@ -6,6 +6,7 @@
       :show-scrollbar="false"
       scroll-y
       class="scroll-view"
+      @scroll="onScroll"
     >
       <!-- 房源信息卡片 -->
       <property-card :caseDetail="caseDetail" />
@@ -23,10 +24,7 @@
       <completion-section :caseDetail="caseDetail" />
     </scroll-view>
 
-    <!-- 底部咨询按钮 -->
-    <view class="footer">
-      <button class="consult-btn" @click="handleConsult">立即咨询</button>
-    </view>
+    <contact-service :scrollTop="scrollTop" />
   </view>
 </template>
 
@@ -37,27 +35,13 @@ import propertyCard from './components/property-card.vue'
 import costCard from './components/cost-card.vue'
 import constructionSection from './components/construction-section.vue'
 import completionSection from './components/completion-section.vue'
+import contactService from '@/components/contact-service.vue'
 // service
 import { getCaseDetailService } from './sevice'
 
 // 响应式数据
 const caseDetail = ref<any>(null)
-
-// 处理咨询
-const handleConsult = (): void => {
-  uni.showToast({
-    title: '咨询功能开发中',
-    icon: 'none',
-  })
-}
-
-// 页面加载
-onLoad((options) => {
-  const { id } = options ?? {}
-  if (id) {
-    loadCaseDetail(id)
-  }
-})
+const scrollTop = ref<number>()
 
 // 加载案例详情
 const loadCaseDetail = async (id: number): Promise<void> => {
@@ -67,6 +51,19 @@ const loadCaseDetail = async (id: number): Promise<void> => {
     console.log('案例详情加载成功:', data)
   }
 }
+
+// 处理滚动事件
+const onScroll = (e: any): void => {
+  scrollTop.value = e.detail.scrollTop
+}
+
+// 页面加载
+onLoad((options) => {
+  const { id } = options ?? {}
+  if (id) {
+    loadCaseDetail(id)
+  }
+})
 </script>
 
 <style lang="scss" scoped>
@@ -91,31 +88,5 @@ page {
 
 .divider-view {
   height: 16px;
-}
-
-// 底部按钮
-.footer {
-  padding: 16px 20px;
-  background: #fff;
-  border-top: 1px solid #f0f0f0;
-  flex-shrink: 0; // 防止按钮被压缩
-
-  .consult-btn {
-    width: 100%;
-    height: 48px;
-    background: linear-gradient(135deg, #00cec9, #00b4d8);
-    color: #fff;
-    border: none;
-    border-radius: 24px;
-    font-size: 16px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &:active {
-      opacity: 0.8;
-    }
-  }
 }
 </style>
