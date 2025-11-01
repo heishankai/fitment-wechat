@@ -169,6 +169,13 @@
             "navigationBarTitleText": "新增地址",
             "disableScroll": true
           }
+        },
+        {
+          "path": "progress/index",
+          "style": {
+            "navigationBarTitleText": "施工进度",
+            "disableScroll": true
+          }
         }
       ]
     }
