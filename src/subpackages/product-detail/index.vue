@@ -22,77 +22,69 @@
       </view>
       <view class="divider-view"></view>
 
-      <!-- 商品基本信息 -->
-      <custom-card>
-        <view class="product-info">
-          <view class="category-tag">地砖瓷砖</view>
-          <view class="product-title">{{ productDetail?.commodity_name }}</view>
-          <view class="product-price">¥{{ productDetail?.commodity_price }}/片</view>
-        </view>
-      </custom-card>
-      <view class="divider-view"></view>
+      <view class="content-area">
+        <view class="category-tag">地砖瓷砖</view>
 
-      <!-- 服务保障 -->
-      <custom-card>
-        <view class="service-guarantee">
-          <view class="section-header">
-            <view class="icon-wrapper">
-              <uni-icons
-                custom-prefix="iconfont"
-                type="icon-anquanbaozhang"
-                color="#00cec9"
-                size="20"
-              />
-            </view>
-            <text class="title">服务保障</text>
+        <view class="divider-view"></view>
+
+        <view class="product-title">{{ productDetail?.commodity_name }}</view>
+
+        <view class="divider-view"></view>
+
+        <view class="product-price">
+          <text class="product-price-value">¥{{ productDetail?.commodity_price }}</text>
+          <text class="product-price-unit">/片</text>
+        </view>
+
+        <view class="divider-view"></view>
+
+        <custom-card>
+          <view class="card-header">
+            <uni-icons custom-prefix="iconfont" type="icon-anquanbaozhang" color="#00cec9" size="20" />
+            <text class="card-title">服务保障</text>
           </view>
-          <view class="guarantee-content">
+          <view class="card-content">
             {{ productDetail?.service_guarantee }}
           </view>
-        </view>
-      </custom-card>
-      <view class="divider-view"></view>
+        </custom-card>
 
-      <!-- 商品描述 -->
-      <custom-card>
-        <view class="product-description">
-          <view class="section-header">
-            <view class="icon-wrapper">
-              <uni-icons
-                custom-prefix="iconfont"
-                type="icon-zanwushuju"
-                color="#00cec9"
-                size="20"
-              />
-            </view>
-            <text class="title">商品描述</text>
+        <view class="divider-view"></view>
+
+        <custom-card>
+          <view class="card-header">
+            <uni-icons custom-prefix="iconfont" type="icon-zanwushuju" color="#00cec9" size="20" />
+            <text class="card-title">商品描述</text>
           </view>
-          <view class="description-content">
+          <view class="card-content">
             {{ productDetail?.commodity_description }}
           </view>
-        </view>
-      </custom-card>
-      <view class="divider-view"></view>
+        </custom-card>
 
-      <!-- 商品详情图片 -->
-      <custom-card>
-        <view class="product-details">
-          <view class="section-header">
-            <view class="separator"></view>
-            <text class="title">商品详情</text>
-          </view>
-          <view class="detail-images">
+        <view class="divider-view"></view>
+
+        <custom-card>
+          <view class="section-title">商品详情</view>
+          <view
+            class="detail-item"
+            v-for="(item, index) in productDetail?.commodity_details || []"
+            :key="index"
+          >
+            <section-header v-if="item.title" :title="item.title" />
             <image
-              v-for="(image, index) in productDetail?.commodity_detail_images || []"
-              :key="index"
+              v-for="(image, imgIndex) in item.image || []"
+              :key="imgIndex"
               class="detail-image"
               :src="image"
               mode="widthFix"
-              @click="handlePreviewImage(index)"
+              :class="{ 'has-title': item.title }"
+              @click="handlePreviewImage(image, item.image)"
             />
+            <view class="detail-desc" v-if="item.desc">
+              {{ item.desc }}
+            </view>
           </view>
-        </view>
-      </custom-card>
+        </custom-card>
+      </view>
     </scroll-view>
   </view>
 </template>
@@ -101,6 +93,8 @@
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { previewImage } from '@/utils'
+import customCard from '@/components/custom-card.vue'
+import sectionHeader from '@/components/section-header.vue'
 // service
 import { getCommodityDetailService } from './service'
 
@@ -123,11 +117,10 @@ const handlePreviewCarouselImage = (index: number): void => {
 }
 
 // 查看图片详情
-const handlePreviewImage = (index: number): void => {
-  previewImage(
-    productDetail.value?.commodity_detail_images?.[index] || '',
-    productDetail.value?.commodity_detail_images?.map((item: string) => item) || [''],
-  )
+const handlePreviewImage = (currentImage: string, images: string[]): void => {
+  const allImages =
+    productDetail.value?.commodity_details?.flatMap((item: any) => item.image || []) || []
+  previewImage(currentImage, allImages.length > 0 ? allImages : images)
 }
 
 // 页面加载
@@ -199,149 +192,102 @@ page {
   margin: 0 6rpx;
 }
 
-// 商品基本信息
-.product-info {
-  padding: 0px 16px;
+.content-area {
+  padding: 16px;
+}
 
-  .category-tag {
-    display: inline-block;
-    padding: 12rpx 24rpx;
-    background-color: #00cec9;
-    color: #fff;
-    font-size: 26rpx;
-    border-radius: 30rpx;
-    margin-bottom: 24rpx;
-    font-weight: 500;
-  }
+.category-tag {
+  width: fit-content;
+  background: linear-gradient(135deg, #00cec9, #00b4d8);
+  color: #fff;
+  padding: 6px 24px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 600;
+}
 
-  .product-title {
-    font-size: 36rpx;
+.product-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.5;
+}
+
+.product-price {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .product-price-value {
+    font-size: 24px;
     font-weight: 600;
-    color: #333;
-    line-height: 1.5;
-    margin-bottom: 24rpx;
-  }
-
-  .product-price {
-    font-size: 40rpx;
-    font-weight: 700;
     color: #00cec9;
   }
-}
 
-// 服务保障
-.service-guarantee {
-  margin: 0px 16px;
-
-  background-color: #f8f9fa;
-  border: 1rpx solid #f0f0f0;
-  border-radius: 20rpx;
-  padding: 40rpx 30rpx;
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 24rpx;
-
-    .icon-wrapper {
-      width: 70rpx;
-      height: 70rpx;
-      background-color: #e8f8f5;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 24rpx;
-    }
-
-    .title {
-      font-size: 34rpx;
-      font-weight: 600;
-      color: #333;
-    }
-  }
-
-  .guarantee-content {
-    font-size: 30rpx;
-    color: #666;
-    line-height: 1.8;
-    text-align: justify;
+  .product-price-unit {
+    font-size: 16px;
+    font-weight: 400;
+    color: #2c3e50;
   }
 }
 
-// 商品描述
-.product-description {
-  margin: 0px 16px;
-  background-color: #f8f9fa;
-  border: 1rpx solid #f0f0f0;
-  border-radius: 20rpx;
-  padding: 40rpx 30rpx;
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
 
-  .section-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 24rpx;
-
-    .icon-wrapper {
-      width: 70rpx;
-      height: 70rpx;
-      background-color: #e8f8f5;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 24rpx;
-    }
-
-    .title {
-      font-size: 34rpx;
-      font-weight: 600;
-      color: #333;
-    }
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
   }
+}
 
-  .description-content {
-    font-size: 30rpx;
-    color: #666;
-    line-height: 1.8;
-    text-align: justify;
-  }
+.card-content {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #555;
+  word-break: break-all;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0;
 }
 
 // 商品详情
-.product-details {
-  margin: 0px 16px;
+.detail-item {
+  margin-top: 16px;
 
-  .section-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 32rpx;
+  &:first-child {
+    margin-top: 0;
+  }
 
-    .separator {
-      width: 8rpx;
-      height: 36rpx;
-      background-color: #00cec9;
-      margin-right: 24rpx;
-      border-radius: 4rpx;
+  .detail-image {
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+
+    &:last-child {
+      margin-bottom: 0;
     }
 
-    .title {
-      font-size: 34rpx;
-      font-weight: 600;
-      color: #333;
+    &.has-title {
+      margin-top: 16px;
     }
   }
 
-  .detail-images {
-    .detail-image {
-      width: 100%;
-      margin-bottom: 24rpx;
-      border-radius: 12rpx;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
+  .detail-desc {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #555;
+    padding: 0;
+    word-break: break-all;
+    position: relative;
   }
 }
 </style>

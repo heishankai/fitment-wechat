@@ -35,17 +35,19 @@
 
     <view class="divider-view"></view>
     <custom-card>
-      <section-header title="服务详情" />
+      <view class="section-title">服务详情</view>
       <view
         class="service-detail-item"
         v-for="(item, index) in workTypeDetail?.service_details"
         :key="index"
       >
-        <image 
-          :src="item.service_image" 
-          mode="aspectFill" 
+        <section-header v-if="item.service_title" :title="item.service_title" />
+        <image
+          :src="item.service_image[0]"
+          mode="aspectFill"
           class="service-detail-image"
-          @click="handlePreviewImage(item.service_image)"
+          :class="{ 'has-title': item.service_title }"
+          @click="handlePreviewImage(item.service_image[0])"
         />
         <view class="service-detail-desc" v-if="item.service_desc">
           {{ item.service_desc }}
@@ -64,7 +66,7 @@ const props = defineProps<{ workTypeDetail: Record<string, any> }>()
 
 const handlePreviewImage = (currentImage: string): void => {
   const serviceDetails = props.workTypeDetail?.service_details || []
-  const imageUrls = serviceDetails.map((item: any) => item.service_image || item).filter(Boolean)
+  const imageUrls = serviceDetails.flatMap((item: any) => item.service_image || [])
   previewImage(currentImage, imageUrls)
 }
 </script>
@@ -90,16 +92,17 @@ const handlePreviewImage = (currentImage: string): void => {
   }
 }
 
-.service-detail-item {
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
-  border: 1px solid #f0f0f0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
 
-  &:last-child {
-    margin-bottom: 0;
+.service-detail-item {
+  margin-top: 16px;
+
+  &:first-child {
+    margin-top: 0;
   }
 
   .service-detail-image {
@@ -109,12 +112,16 @@ const handlePreviewImage = (currentImage: string): void => {
     overflow: hidden;
     margin-bottom: 16px;
     border: 1px solid #f5f5f5;
+
+    &.has-title {
+      margin-top: 16px;
+    }
   }
 
   .service-detail-desc {
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.8;
-    color: #333;
+    color: #555;
     padding: 0;
     word-break: break-all;
     position: relative;
