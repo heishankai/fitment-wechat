@@ -30,13 +30,12 @@
         @content-transitioning="onContentTransitioning"
       />
     </scroll-view>
-    <contact-service :scrollTop="scrollTop"/>
+    <contact-service :scrollTop="scrollTop" />
     <!-- <tabbar selected="3"></tabbar> -->
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 // components
 // import tabbar from '@/components/custom-tab-bar.vue'
 import categorySelector from './components/category-selector.vue'

@@ -17,7 +17,14 @@
       </view>
     </view>
     <!-- 轮播图 -->
+    <!-- 只在有数据时才渲染swiper，避免初始化闪动 -->
+    <view v-if="swiperList.length === 0" class="swiper-placeholder">
+      <view class="placeholder-content">
+        <uni-icons type="image" size="40" color="#ddd" />
+      </view>
+    </view>
     <swiper
+      v-else
       class="swiper"
       :current="current"
       :indicator-dots="false"
@@ -32,13 +39,15 @@
           class="carousel-image"
           :src="image"
           mode="scaleToFill"
+          :lazy-load="true"
           @click="handlePreviewCarouselImage(index)"
+          @load="onImageLoad"
         />
       </swiper-item>
     </swiper>
 
     <!-- 自定义指示点 -->
-    <view class="custom-dots">
+    <view v-if="swiperList.length > 0" class="custom-dots">
       <view
         v-for="(image, index) in swiperList"
         :key="index"
@@ -59,7 +68,8 @@ const { safeArea } = wx.getSystemInfoSync()
 const current = ref(0)
 const city_name = ref('杭州市')
 const isScrolled = ref(false)
-const swiperList = ref([])
+const swiperList = ref<string[]>([])
+const imageLoaded = ref(false) // 图片加载状态
 
 // 监听页面滚动
 const handleScroll = (e: any): void => {
@@ -81,7 +91,17 @@ const loadCity = (): void => {
 
 // swiper 切换事件
 const onSwiperChange = (e: any): void => {
-  current.value = e.detail.current
+  const newCurrent = e.detail.current
+  if (current.value !== newCurrent) {
+    current.value = newCurrent
+  }
+}
+
+// 图片加载完成处理
+const onImageLoad = (): void => {
+  if (!imageLoaded.value) {
+    imageLoaded.value = true
+  }
 }
 
 // 点击图片预览
@@ -94,9 +114,18 @@ const handlePreviewCarouselImage = (index: number): void => {
 
 // 加载轮播图
 const loadSwiperList = async (): Promise<void> => {
-  const { success, data } = await getSwiperListService()
-  if (!success) return
-  swiperList.value = data?.swiper_image || []
+  try {
+    const { success, data } = await getSwiperListService()
+    if (success && data?.swiper_image?.length) {
+      // 一次性更新数据，避免多次渲染导致闪动
+      swiperList.value = data.swiper_image
+      // 重置到第一张
+      current.value = 0
+      imageLoaded.value = false
+    }
+  } catch (error) {
+    console.error('加载轮播图失败:', error)
+  }
 }
 
 // 跳转城市选择页面
@@ -118,9 +147,11 @@ onShow(() => {
 <style lang="scss">
 .swiper-header {
   width: 100%;
-  height: 55vh;
+  height: 760rpx; // 使用固定rpx单位，避免vh在微信小程序中的兼容性问题
+  min-height: 760rpx; // 确保最小高度
   background-color: #fff;
   position: relative;
+  overflow: hidden; // 防止内容溢出导致闪烁
 
   .custom-navbar {
     position: fixed;
@@ -192,15 +223,43 @@ onShow(() => {
     }
   }
 
+  // 占位内容
+  .swiper-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .placeholder-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
   .swiper {
     width: 100%;
     height: 100%;
+    // 防止swiper在scroll-view中闪动
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
 
   .carousel-image {
     width: 100%;
     height: 100%;
+    display: block;
+    // 使用aspectFill模式时，确保图片正确显示
     object-fit: cover;
+    // 防止图片加载时的闪烁
+    background-color: #f5f5f5;
+    // 硬件加速
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
 
   /* 自定义指示点 */

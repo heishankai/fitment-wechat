@@ -2,10 +2,9 @@
   <view class="category-section">
     <view class="section-header">
       <text class="section-title">热门品类</text>
-      <!-- <text class="more-btn" @click="navigateToAllCategories">更多 ></text> -->
     </view>
-    <scroll-view 
-      class="category-scroll" 
+    <scroll-view
+      class="category-scroll"
       scroll-x
       @scrolltolower="onScrolltolower"
       :scroll-with-animation="true"
@@ -36,10 +35,10 @@
           <image :src="category.category_image" mode="aspectFill" class="category-image" />
           <text class="category-name">{{ category.category_name }}</text>
         </view>
-        
+
         <!-- 占位元素，确保最后一个品类不被遮挡 -->
         <view class="spacer-item"></view>
-        
+
         <!-- 加载更多指示器 -->
         <view v-if="loading" class="loading-item">
           <view class="loading-spinner">
@@ -91,7 +90,7 @@ const loadCategories = async (): Promise<void> => {
 
   if (success) {
     const newData = data || []
-    
+
     if (newData.length === 0) {
       finish.value = true
     } else {
@@ -183,6 +182,9 @@ $primary-color: #00cec9;
         min-width: 70px;
         cursor: pointer;
         transition: all 0.3s ease;
+        // 固定容器尺寸，避免选中时变化
+        box-sizing: border-box;
+        padding: 3px; // 统一padding，选中和未选中都使用
 
         .category-image {
           width: 60px;
@@ -192,6 +194,10 @@ $primary-color: #00cec9;
           transition: all 0.3s ease;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           overflow: hidden;
+          // 使用box-sizing确保尺寸稳定
+          box-sizing: border-box;
+          // 默认透明边框，避免选中时尺寸变化
+          border: 3px solid transparent;
 
           &.all-category {
             background: linear-gradient(135deg, $primary-color 0%, #00b4d8 100%);
@@ -208,16 +214,18 @@ $primary-color: #00cec9;
           text-align: center;
           transition: all 0.3s ease;
           font-weight: 500;
+          // 固定高度，避免字体粗细变化导致布局抖动
+          min-height: 18px;
+          line-height: 18px;
         }
 
         &.active {
-          // 让整个容器适应选中状态的变化
-          padding: 3px; // 为边框和缩放留出空间
-
           .category-image {
-            border: 3px solid $primary-color;
+            // 使用边框颜色变化，而不是添加边框，保持尺寸不变
+            border-color: $primary-color;
             box-shadow: 0 6px 20px rgba($primary-color, 0.4);
-            transform: scale(1.05);
+            // 移除scale，避免尺寸变化
+            // transform: scale(1.05);
 
             &.all-category {
               background: linear-gradient(135deg, $primary-color 0%, #00b4d8 100%);
@@ -234,20 +242,21 @@ $primary-color: #00cec9;
         &:not(.active) {
           .category-image {
             &:hover {
-              transform: scale(1.02);
+              // 移除scale，保持尺寸稳定
+              // transform: scale(1.02);
               box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             }
           }
         }
       }
-      
+
       .loading-item {
         display: flex;
         flex-direction: column;
         align-items: center;
         min-width: 70px;
         padding: 16px 8px;
-        
+
         .loading-spinner {
           width: 40px;
           height: 40px;
@@ -259,14 +268,14 @@ $primary-color: #00cec9;
           margin-bottom: 8px;
           animation: spin 1s linear infinite;
         }
-        
+
         .loading-text {
           font-size: 12px;
           color: #999;
           text-align: center;
         }
       }
-      
+
       .spacer-item {
         width: 40px;
         flex-shrink: 0;
@@ -276,7 +285,11 @@ $primary-color: #00cec9;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

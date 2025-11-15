@@ -10,7 +10,7 @@
       <view class="section-title">推荐案例</view>
       <case-list ref="caseListRef" />
     </scroll-view>
-    <contact-service :scrollTop="scrollTop"/>
+    <contact-service :scrollTop="scrollTop" />
     <!-- <tabbar selected="2"></tabbar> -->
   </view>
 </template>

@@ -1,5 +1,5 @@
-export const BASEURL = 'http://127.0.0.1:3000' // 本地地址
-// export const BASEURL = 'https://www.1shaoyan.com' // 线上地址
+// export const BASEURL = 'http://127.0.0.1:3000' // 本地地址
+export const BASEURL = 'https://zjiangyun.cn/api' // 线上地址
 
 // 上传文件地址
 export const uploadFileUrl = BASEURL + '/upload'
@@ -103,7 +103,6 @@ export const uploadFileService = (filePath: string): Promise<{ success: boolean;
 
           wx.hideLoading()
           resolve({ success: true, data: data })
-          
         } catch {
           wx.hideLoading()
           uni.showToast({ title: '上传失败', icon: 'none' })
