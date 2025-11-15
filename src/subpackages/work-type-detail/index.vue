@@ -10,7 +10,14 @@
     >
       <!-- 商品轮播图 -->
       <view class="product-carousel">
-        <swiper class="swiper" :indicator-dots="true" :autoplay="false" :circular="true">
+        <swiper
+          class="swiper"
+          :indicator-dots="true"
+          :autoplay="true"
+          :circular="true"
+          :duration="500"
+          :interval="3000"
+        >
           <swiper-item v-for="(image, index) in workTypeDetail?.display_images || []" :key="index">
             <image
               class="carousel-image"

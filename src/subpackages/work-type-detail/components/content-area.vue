@@ -1,12 +1,22 @@
 <template>
   <view class="content-area">
-    <view class="renovation-tag"> {{ workTypeDetail?.work_title }} </view>
-
-    <view class="divider-view"></view>
-
-    <view class="work-price">
-      <text class="work-price-value">{{ workTypeDetail?.work_price }}</text>
-      <text class="work-price-unit">元</text>
+    <!-- 基本信息 -->
+    <view class="basic-info">
+      <view class="info-row">
+        <view class="info-label">工种</view>
+        <view class="info-value tag-value">{{ workTypeDetail?.work_kind?.label }}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">工价名称</view>
+        <view class="info-value tag-value">{{ workTypeDetail?.work_title }}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">工价</view>
+        <view class="info-value tag-value">
+          <text>¥{{ formatPrice(workTypeDetail?.work_price) }}</text>
+          <text>/{{ workTypeDetail?.labour_cost?.labour_cost_name }} </text>
+        </view>
+      </view>
     </view>
 
     <view class="divider-view"></view>
@@ -64,6 +74,13 @@ import { previewImage } from '@/utils'
 
 const props = defineProps<{ workTypeDetail: Record<string, any> }>()
 
+// 格式化价格
+const formatPrice = (price: string | number): string => {
+  if (!price) return '0'
+  const num = typeof price === 'string' ? parseFloat(price) : price
+  return num.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+
 const handlePreviewImage = (currentImage: string): void => {
   const serviceDetails = props.workTypeDetail?.service_details || []
   const imageUrls = serviceDetails.flatMap((item: any) => item.service_image || [])
@@ -73,7 +90,7 @@ const handlePreviewImage = (currentImage: string): void => {
 
 <style lang="scss" scoped>
 .content-area {
-  padding: 16px;
+  padding: 0px 16px 16px 16px;
 }
 .divider-view {
   height: 16px;
@@ -128,35 +145,51 @@ const handlePreviewImage = (currentImage: string): void => {
   }
 }
 
-.renovation-tag {
-  width: fit-content;
-  background: linear-gradient(135deg, #00cec9, #00b4d8);
-  color: #fff;
-  padding: 6px 24px;
-  border-radius: 20px;
-  font-size: 16px;
-  font-weight: 600;
+// 基本信息
+.basic-info {
+  background: #fff;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
 
-  &.old {
-    background: linear-gradient(135deg, #6c757d, #495057);
-  }
-}
+  .info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f5f5f5;
 
-.work-price {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+    &:last-child {
+      border-bottom: none;
+    }
 
-  .work-price-value {
-    font-size: 24px;
-    font-weight: 600;
-    color: #00cec9;
-  }
+    .info-label {
+      font-size: 16px;
+      color: #999;
+      font-weight: 400;
+      min-width: 80px;
+    }
 
-  .work-price-unit {
-    font-size: 16px;
-    font-weight: 400;
-    color: #2c3e50;
+    .info-value {
+      font-size: 20px;
+      color: #333;
+      font-weight: 700;
+      text-align: right;
+      flex: 1;
+
+      &.tag-value {
+        padding: 5px 14px;
+        background: rgba(0, 206, 201, 0.1);
+        color: #00cec9;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        display: inline-block;
+        width: fit-content;
+        margin-left: auto;
+      }
+    }
   }
 }
 </style>

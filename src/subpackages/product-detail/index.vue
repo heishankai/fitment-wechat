@@ -9,7 +9,14 @@
     >
       <!-- 商品轮播图 -->
       <view class="product-carousel">
-        <swiper class="swiper" :indicator-dots="true" :autoplay="false" :circular="true">
+        <swiper
+          class="swiper"
+          :indicator-dots="true"
+          :autoplay="true"
+          :circular="true"
+          :duration="500"
+          :interval="3000"
+        >
           <swiper-item v-for="(image, index) in productDetail?.commodity_images || []" :key="index">
             <image
               class="carousel-image"
@@ -40,7 +47,12 @@
 
         <custom-card>
           <view class="card-header">
-            <uni-icons custom-prefix="iconfont" type="icon-anquanbaozhang" color="#00cec9" size="20" />
+            <uni-icons
+              custom-prefix="iconfont"
+              type="icon-anquanbaozhang"
+              color="#00cec9"
+              size="20"
+            />
             <text class="card-title">服务保障</text>
           </view>
           <view class="card-content">

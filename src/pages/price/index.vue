@@ -9,7 +9,7 @@
         <uni-icons type="search" size="18" color="#999" />
         <input
           v-model="searchKeyword"
-          placeholder="搜索工种、服务内容..."
+          placeholder="搜索工价名称..."
           class="search-input"
           @input="onSearchInput"
         />
@@ -18,10 +18,34 @@
         </view>
       </view>
     </view>
-    <!-- 统计卡片 -->
-    <stats-card />
 
-    <!-- 工种列表 -->
+    <!-- 工种Tabs标签页 -->
+    <view class="tabs-section">
+      <scroll-view scroll-x class="tabs-scroll" :scroll-left="tabsScrollLeft">
+        <view class="tabs-container">
+          <view
+            class="tab-item"
+            :class="{ active: selectedWorkKindId === null }"
+            hover-class="none"
+            @click="selectWorkKind(null)"
+          >
+            <text>全部</text>
+          </view>
+          <view
+            class="tab-item"
+            v-for="kind in workKindList"
+            :key="kind.id"
+            :class="{ active: selectedWorkKindId === kind.id }"
+            hover-class="none"
+            @click="selectWorkKind(kind.id)"
+          >
+            <text>{{ kind.work_kind_name }}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 工价列表 -->
     <scroll-view
       enable-back-to-top
       refresher-enabled
@@ -35,29 +59,58 @@
       <work-list ref="workListRef" />
     </scroll-view>
     <contact-service :scrollTop="scrollTop" />
-    <!-- <tabbar selected="1"></tabbar> -->
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { debounce } from 'lodash-es'
 // components
-// import tabbar from '@/components/custom-tab-bar.vue'
 import customNavbar from './components/custom-navbar.vue'
-import statsCard from './components/stats-card.vue'
 import workList from './components/work-list.vue'
 import contactService from '@/components/contact-service.vue'
+import { getWorkKindListService } from './service'
+
+// 工种列表
+interface WorkKind {
+  id: number
+  work_kind_name: string
+}
+
+const workKindList = ref<WorkKind[]>([])
+const selectedWorkKindId = ref<number | null>(null)
+const tabsScrollLeft = ref(0)
+const searchKeyword = ref('')
+const workListRef = ref<any>()
+const scrollTop = ref<number>(0)
+const isTriggered = ref(false)
+
+// 加载工种列表
+const loadWorkKindList = async (): Promise<void> => {
+  try {
+    const { data, success } = await getWorkKindListService()
+    if (success && data) {
+      workKindList.value = data
+    }
+  } catch (error) {
+    console.error('加载工种列表失败:', error)
+  }
+}
+
+// 选择工种
+// 注意：工种列表中的 work_kind_name 对应工价列表中 work_kind.label
+// 筛选时使用 work_kind.id 来匹配工价列表中的 work_kind.id
+const selectWorkKind = (kindId: number | null): void => {
+  selectedWorkKindId.value = kindId
+  // 重置并重新加载工价列表
+  workListRef.value?.resetData()
+  workListRef.value?.loadWorkList(searchKeyword.value, kindId)
+}
+
 // 滚动到底部事件
 const onScrolltolower = (): void => {
   workListRef.value?.getMore()
 }
-
-const searchKeyword = ref('')
-const workListRef = ref<any>()
-const scrollTop = ref<number>(0)
-// 当前下拉刷新状态
-const isTriggered = ref(false)
 
 // 搜索输入处理
 const onSearchInput = (e: any): void => {
@@ -67,7 +120,7 @@ const onSearchInput = (e: any): void => {
   // 如果输入框为空，重置数据
   if (!value.trim()) {
     workListRef.value?.resetData()
-    workListRef.value?.loadWorkList()
+    workListRef.value?.loadWorkList('', selectedWorkKindId.value)
     return
   }
 
@@ -78,14 +131,14 @@ const onSearchInput = (e: any): void => {
 // 防抖搜索函数
 const debouncedSearch = debounce(() => {
   workListRef.value?.resetData()
-  workListRef.value?.loadWorkList(searchKeyword.value)
+  workListRef.value?.loadWorkList(searchKeyword.value, selectedWorkKindId.value)
 }, 500)
 
 // 清空搜索
 const clearSearch = (): void => {
   searchKeyword.value = ''
   workListRef.value?.resetData()
-  workListRef.value?.loadWorkList()
+  workListRef.value?.loadWorkList('', selectedWorkKindId.value)
 }
 
 // 自定义下拉刷新被触发
@@ -93,9 +146,9 @@ const onRefresherrefresh = async (): Promise<void> => {
   // 开始动画
   isTriggered.value = true
 
-  // 重置工种列表数据
+  // 重置工价列表数据
   workListRef.value?.resetData()
-  await workListRef.value?.loadWorkList()
+  await workListRef.value?.loadWorkList(searchKeyword.value, selectedWorkKindId.value)
 
   // 关闭动画
   isTriggered.value = false
@@ -106,8 +159,9 @@ const onScroll = (e: any): void => {
   scrollTop.value = e.detail.scrollTop
 }
 
-onLoad(() => {
-  // 页面加载时，工种列表组件会自动加载数据
+// 初始化
+onMounted(() => {
+  loadWorkKindList()
 })
 </script>
 
@@ -142,6 +196,7 @@ page {
 .search-section {
   padding: 16px;
   background: #fff;
+  border-bottom: 1px solid $border-color;
 
   .search-box {
     display: flex;
@@ -168,6 +223,51 @@ page {
       height: 20px;
       border-radius: 50%;
       background: #ddd;
+    }
+  }
+}
+
+/* Tabs标签页 */
+.tabs-section {
+  background: #fff;
+  border-bottom: 1px solid $border-color;
+  padding: 0 16px;
+
+  .tabs-scroll {
+    white-space: nowrap;
+    width: 100%;
+
+    .tabs-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+
+      .tab-item {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 28px;
+        border-radius: 24px;
+        background: #f5f5f5;
+        color: $text-secondary;
+        font-size: 15px;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+
+        &.active {
+          background: $primary-color;
+          color: #fff;
+          font-weight: 600;
+        }
+
+        text {
+          line-height: 1;
+        }
+      }
     }
   }
 }
