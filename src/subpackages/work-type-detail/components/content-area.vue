@@ -109,6 +109,10 @@ const handlePreviewImage = (currentImage: string): void => {
   }
 }
 
+.card-content {
+  white-space: pre-line;
+}
+
 .section-title {
   font-size: 18px;
   font-weight: 600;
@@ -141,6 +145,7 @@ const handlePreviewImage = (currentImage: string): void => {
     color: #555;
     padding: 0;
     word-break: break-all;
+    white-space: pre-line;
     position: relative;
   }
 }

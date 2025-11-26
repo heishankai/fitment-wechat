@@ -30,7 +30,7 @@
       <view class="divider-view"></view>
 
       <view class="content-area">
-        <view class="category-tag">地砖瓷砖</view>
+        <view class="category-tag">{{ productDetail?.category_name }}</view>
 
         <view class="divider-view"></view>
 
@@ -40,7 +40,7 @@
 
         <view class="product-price">
           <text class="product-price-value">¥{{ productDetail?.commodity_price }}</text>
-          <text class="product-price-unit">/片</text>
+          <text class="product-price-unit">/{{ productDetail?.commodity_unit }}</text>
         </view>
 
         <view class="divider-view"></view>
@@ -261,6 +261,7 @@ page {
   line-height: 1.8;
   color: #555;
   word-break: break-all;
+  white-space: pre-line;
 }
 
 .section-title {
@@ -300,6 +301,7 @@ page {
     padding: 0;
     word-break: break-all;
     position: relative;
+    white-space: pre-line;
   }
 }
 </style>

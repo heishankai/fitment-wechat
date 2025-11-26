@@ -1,5 +1,5 @@
-// export const BASEURL = 'http://127.0.0.1:3000' // 本地地址
-export const BASEURL = 'https://zjiangyun.cn/api' // 线上地址
+export const BASEURL = 'http://127.0.0.1:3000' // 本地地址
+// export const BASEURL = 'https://zjiangyun.cn/api' // 线上地址
 
 // 上传文件地址
 export const uploadFileUrl = BASEURL + '/upload'
