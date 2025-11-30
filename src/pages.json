@@ -176,6 +176,13 @@
             "navigationBarTitleText": "施工进度",
             "disableScroll": true
           }
+        },
+        {
+          "path": "contact-craftsman/index",
+          "style": {
+            "navigationBarTitleText": "联系工匠",
+            "disableScroll": true
+          }
         }
       ]
     }

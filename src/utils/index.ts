@@ -65,3 +65,87 @@ export const formatPhone = (phone: string | undefined): string => {
   // 如果长度不足，直接返回
   return phone
 }
+
+/**
+ * 获取用户位置信息
+ * @returns Promise<{ latitude: number; longitude: number } | null>
+ */
+export const getUserLocation = async (): Promise<{
+  value: any;
+  latitude: number
+  longitude: number
+} | null> => {
+  try {
+    // 先检查授权状态
+    const authResult = await new Promise<{ authSetting: any }>((resolve) => {
+      wx.getSetting({
+        success: (res) => resolve(res),
+        fail: () => resolve({ authSetting: {} }),
+      })
+    })
+
+    // 如果未授权，请求授权
+    if (!authResult.authSetting['scope.userLocation']) {
+      const authRes = await new Promise<{ authSetting: any }>((resolve) => {
+        wx.authorize({
+          scope: 'scope.userLocation',
+          success: () => {
+            wx.getSetting({
+              success: (res) => resolve(res),
+              fail: () => resolve({ authSetting: {} }),
+            })
+          },
+          fail: () => {
+            wx.showModal({
+              title: '提示',
+              content: '需要获取您的位置信息，请在设置中开启位置权限',
+              showCancel: true,
+              confirmText: '去设置',
+              success: (modalRes) => {
+                if (modalRes.confirm) {
+                  wx.openSetting()
+                }
+              },
+            })
+            resolve({ authSetting: {} })
+          },
+        })
+      })
+
+      if (!authRes.authSetting['scope.userLocation']) {
+        return null
+      }
+    }
+
+    // 获取位置信息
+    const locationRes: any = await new Promise<any>((resolve, reject) => {
+      wx.getLocation({
+        type: 'gcj02', // 使用GCJ02坐标系（腾讯地图标准）
+        altitude: 'true', // 返回高度信息
+        isHighAccuracy: true, // 开启高精度定位
+        highAccuracyExpireTime: 4000, // 高精度定位超时时间
+        success: (res) => resolve(res),
+        fail: (err) => reject(err),
+      })
+    })
+
+    console.log(locationRes, 'locationRes')
+
+    const location = {
+      latitude: locationRes.latitude,
+      longitude: locationRes.longitude,
+    }
+
+    console.log('获取位置成功:', location)
+    return location
+  } catch (error: any) {
+    console.error('获取位置失败:', error)
+    wx.showToast({
+      title: error.errMsg || '获取位置失败',
+      icon: 'none',
+    })
+    return null
+  }
+}
+
+

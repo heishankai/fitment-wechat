@@ -170,7 +170,7 @@ const handleCalculate = (): void => {
         font-size: 30rpx;
         color: #333;
         text-align: right;
-        width: 120rpx;
+        width: 200rpx;
         border: none;
         background: transparent;
       }

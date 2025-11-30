@@ -72,11 +72,15 @@ const onScroll = (e: any): void => {
   scrollTop.value = e.detail.scrollTop
 }
 
-// 处理咨询
+// 联系工匠
 const handleConsult = (): void => {
-  uni.showToast({
-    title: '咨询功能开发中',
-    icon: 'none',
+  uni.vibrateShort()
+
+  console.log(workTypeDetail.value, 'workTypeDetail.value')
+  const { work_kind_name, id } = workTypeDetail.value.work_kind ?? {}
+
+  wx.navigateTo({
+    url: `/subpackages/contact-craftsman/index?work_kind_name=${encodeURIComponent(work_kind_name)}&id=${id}`,
   })
 }
 </script>

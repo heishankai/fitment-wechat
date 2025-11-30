@@ -5,7 +5,13 @@
 </template>
 
 <script setup lang="ts">
-onLoad(() => {})
+import { getOrderListService } from './service'
+
+onLoad(() => {
+  getOrderListService().then((res) => {
+    console.log(res)
+  })
+})
 </script>
 
 <style lang="scss">
