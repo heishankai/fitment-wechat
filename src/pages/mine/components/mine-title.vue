@@ -10,13 +10,13 @@
         url="/subpackages/orders/index"
       />
 
-      <function-card
+      <!-- <function-card
         title="施工进度"
         desc="查看施工进度"
         icon-type="home"
         icon-color="#00cec9"
         url="/subpackages/progress/index"
-      />
+      /> -->
 
       <function-card
         title="地址管理"

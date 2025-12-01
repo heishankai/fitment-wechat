@@ -1,4 +1,10 @@
 import { ref } from 'vue'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
+
+dayjs.extend(relativeTime)
+dayjs.locale('zh-cn')
 /**
  * 猜你喜欢组合式函数
  */
@@ -148,4 +154,26 @@ export const getUserLocation = async (): Promise<{
   }
 }
 
+/**
+ * 格式化时间 - 显示相对时间或日期
+ * @param time 时间字符串
+ * @returns 格式化后的时间字符串
+ */
+export const formatTime = (time: string): string => {
+  if (!time) return ''
+  
+  const date = dayjs(time)
+  const now = dayjs()
+  const diffDays = now.diff(date, 'day')
+  
+  if (diffDays === 0) {
+    return '今天'
+  } else if (diffDays === 1) {
+    return '昨天'
+  } else if (diffDays < 7) {
+    return `${diffDays}天前`
+  } else {
+    return date.format('M-D')
+  }
+}
 

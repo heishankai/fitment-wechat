@@ -20,7 +20,7 @@
           <view class="logo-ring"></view>
         </view>
         <text class="welcome-text">欢迎使用</text>
-        <text class="app-name">叮当智装</text>
+        <text class="app-name">叮当优+</text>
         <text class="subtitle">让装修变得更简单</text>
       </view>
 

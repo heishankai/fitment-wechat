@@ -37,7 +37,7 @@
 
     <!-- 底部咨询按钮 -->
     <view class="footer">
-      <button class="consult-btn" @click="handleConsult">联系工匠</button>
+      <button class="consult-btn" @click="handleConsult">寻找工匠</button>
     </view>
   </view>
 </template>

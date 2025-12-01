@@ -12,7 +12,7 @@
           </view>
           <text :class="{ 'text-dark': isScrolled }">{{ city_name }}</text>
         </view>
-        <view class="title" :class="{ 'text-dark': isScrolled }">叮当智装</view>
+        <view class="title" :class="{ 'text-dark': isScrolled }">叮当优+</view>
         <view class="placeholder"></view>
       </view>
     </view>

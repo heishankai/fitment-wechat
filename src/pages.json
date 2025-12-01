@@ -46,8 +46,8 @@
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "装修助手",
-    "navigationBarBackgroundColor": "#F8F8F8",
-    "backgroundColor": "#F8F8F8"
+    "navigationBarBackgroundColor": "#fff",
+    "backgroundColor": "#fff"
   },
   "tabBar": {
     // "custom": true,
@@ -66,7 +66,7 @@
         "pagePath": "pages/house/index",
         "iconPath": "static/tabbar/home.png",
         "selectedIconPath": "static/tabbar/house_selected.png",
-        "text": "我的房子"
+        "text": "首页"
       },
       {
         "pagePath": "pages/price/index",
@@ -150,6 +150,13 @@
           }
         },
         {
+          "path": "order-detail/index",
+          "style": {
+            "navigationBarTitleText": "订单详情",
+            "disableScroll": true
+          }
+        },
+        {
           "path": "address/index",
           "style": {
             "navigationBarTitleText": "地址管理",
@@ -179,6 +186,20 @@
         },
         {
           "path": "contact-craftsman/index",
+          "style": {
+            "navigationBarTitleText": "寻找工匠",
+            "disableScroll": true
+          }
+        },
+        {
+          "path": "message-list/index",
+          "style": {
+            "navigationBarTitleText": "消息列表",
+            "disableScroll": true
+          }
+        },
+        {
+          "path": "craftsman-service/index",
           "style": {
             "navigationBarTitleText": "联系工匠",
             "disableScroll": true

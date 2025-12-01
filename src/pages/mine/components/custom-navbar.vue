@@ -4,38 +4,27 @@
       <view class="icon" @click="handleNotificationClick">
         <uni-icons type="notification" size="30" color="#fff" />
         <!-- 消息角标 -->
-        <view v-if="messageCount > 0" class="badge">
-          <text class="badge-text">{{ messageCount > 99 ? '99+' : messageCount }}</text>
-        </view>
+        <view class="badge" />
       </view>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-
 // 获取屏幕边界到安全区域距离
 const { safeArea } = wx.getSystemInfoSync()
 
-// 消息数量
-const messageCount = ref(5) // 示例数据，实际应该从接口获取
-
 // 点击通知图标
 const handleNotificationClick = (): void => {
-  // 跳转到消息页面
-  uni.navigateTo({
-    url: '/subpackages/customer-service/index'
+  // 跳转到消息列表
+  wx.navigateTo({
+    url: '/subpackages/message-list/index',
   })
-  
-  // 点击后清除角标
-  messageCount.value = 0
 }
 
 // 暴露方法给父组件
 defineExpose({
-  messageCount,
-  handleNotificationClick
+  handleNotificationClick,
 })
 </script>
 
@@ -76,10 +65,10 @@ $secondary: #00b4d8;
 
       .badge {
         position: absolute;
-        top: -6px;
+        top: 0px;
         right: -6px;
-        min-width: 20px;
-        height: 20px;
+        min-width: 20rpx;
+        height: 16rpx;
         background: #ff4757;
         border-radius: 10px;
         display: flex;

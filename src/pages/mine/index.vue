@@ -5,13 +5,10 @@
       <mine-header :userInfo="userInfo" />
       <mine-title />
     </scroll-view>
-    <!-- <tabbar selected="4"></tabbar> -->
   </view>
 </template>
 
 <script setup lang="ts">
-// components
-// import tabbar from '@/components/custom-tab-bar.vue'
 import mineHeader from './components/mine-header.vue'
 import mineTitle from './components/mine-title.vue'
 import customNavbar from './components/custom-navbar.vue'
