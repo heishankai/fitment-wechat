@@ -20,8 +20,14 @@
       @change="handleSwiperChange"
       :duration="300"
     >
-      <swiper-item v-for="tab in tabs" :key="tab.key" class="swiper-item">
-        <scroll-view class="scroll-view" scroll-y>
+      <swiper-item v-for="(tab, tabIndex) in tabs" :key="tab.key" class="swiper-item">
+        <scroll-view
+          class="scroll-view"
+          scroll-y
+          refresher-enabled
+          :refresher-triggered="refresherTriggered[tabIndex]"
+          @refresherrefresh="() => handleRefresherRefresh(tabIndex)"
+        >
           <view
             v-for="order in getOrderListByStatus(tab.status)"
             :key="order.id"
@@ -90,6 +96,7 @@ const tabs = [
 const activeTab = ref('0')
 const currentIndex = ref(0)
 const orderList = ref<any[]>([])
+const refresherTriggered = ref<boolean[]>(new Array(5).fill(false))
 
 // 根据状态获取订单列表
 const getOrderListByStatus = (status: number | null): any[] => {
@@ -141,6 +148,13 @@ const getOrderList = async (): Promise<void> => {
   if (success && data) {
     orderList.value = data
   }
+}
+
+// 下拉刷新
+const handleRefresherRefresh = async (tabIndex: number): Promise<void> => {
+  refresherTriggered.value[tabIndex] = true
+  await getOrderList()
+  refresherTriggered.value[tabIndex] = false
 }
 
 onLoad(() => {

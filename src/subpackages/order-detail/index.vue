@@ -7,6 +7,9 @@
       scroll-y
       class="scroll-view"
       @scroll="onScroll"
+      refresher-enabled
+      :refresher-triggered="isTriggered"
+      @refresherrefresh="onRefresherrefresh"
     >
       <!-- 订单基本信息 -->
       <OrderInfoCard :orderDetail="orderDetail" />
@@ -17,8 +20,30 @@
       <view v-if="orderDetail?.craftsman_user" class="divider-view"></view>
 
       <!-- 费用明细 -->
-      <OrderCostCard v-if="orderDetail?.work_prices" :orderDetail="orderDetail" />
-      <view class="divider-view"></view>
+      <OrderCostCard
+        v-if="orderDetail?.work_prices"
+        :orderDetail="orderDetail"
+        @refresh="() => orderId && loadOrderDetail(orderId)"
+      />
+      <view v-if="orderDetail?.work_prices" class="divider-view"></view>
+
+      <!-- 子工价清单 -->
+      <SubWorkPriceList
+        v-if="orderDetail?.sub_work_prices?.length"
+        :sub-work-prices="orderDetail.sub_work_prices"
+        :order-detail="orderDetail"
+        @refresh="() => orderId && loadOrderDetail(orderId)"
+      />
+      <view v-if="orderDetail?.sub_work_prices?.length" class="divider-view"></view>
+
+      <!-- 辅材清单 -->
+      <MaterialsListCard
+        v-if="orderDetail?.materials_list?.length"
+        :materials-list="orderDetail.materials_list"
+        :order-detail="orderDetail"
+        @refresh="() => orderId && loadOrderDetail(orderId)"
+      />
+      <view v-if="orderDetail?.materials_list?.length" class="divider-view"></view>
 
       <!-- 施工进度 -->
       <ConstructionProgressCard
@@ -27,9 +52,21 @@
       />
     </scroll-view>
     <view class="footer">
-      <button class="consult-btn" @click="handleConsult">
-        <uni-icons type="chat" size="20" color="#fff" />联系工匠
-      </button>
+      <!-- 待接单状态：显示取消订单和联系工匠按钮 -->
+      <template v-if="orderDetail?.order_status === 1">
+        <button class="cancel-btn" @click="handleCancelOrder">
+          <uni-icons type="close" size="20" color="#ff6b6b" />取消订单
+        </button>
+        <button class="consult-btn" @click="handleConsult">
+          <uni-icons type="chat" size="20" color="#fff" />联系工匠
+        </button>
+      </template>
+      <!-- 其他状态：只显示联系工匠按钮 -->
+      <template v-else>
+        <button class="consult-btn" @click="handleConsult">
+          <uni-icons type="chat" size="20" color="#fff" />联系工匠
+        </button>
+      </template>
     </view>
 
     <ContactService :scrollTop="scrollTop" />
@@ -41,15 +78,19 @@ import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import OrderInfoCard from './components/order-info-card.vue'
 import OrderCostCard from './components/order-cost-card.vue'
+import SubWorkPriceList from './components/sub-work-price-list.vue'
+import MaterialsListCard from './components/materials-list-card.vue'
 import CraftsmanCard from './components/craftsman-card.vue'
 import ConstructionProgressCard from './components/construction-progress-card.vue'
 import ContactService from '@/components/contact-service.vue'
-import { getOrderDetailService } from './service'
+import { getOrderDetailService, cancelOrderService } from './service'
 import { handleContactUser } from './utils'
 
 // 响应式数据
-const orderDetail = ref<any>(null)
+const orderDetail = ref<any>({})
 const scrollTop = ref<number>(0)
+const isTriggered = ref(false)
+const orderId = ref<number | string>('')
 
 // 加载订单详情
 const loadOrderDetail = async (id: number | string): Promise<void> => {
@@ -61,14 +102,80 @@ const loadOrderDetail = async (id: number | string): Promise<void> => {
 // 处理滚动事件
 const onScroll = (e: any): void => (scrollTop.value = e.detail.scrollTop)
 
+// 下拉刷新
+const onRefresherrefresh = async (): Promise<void> => {
+  isTriggered.value = true
+  if (orderId.value) {
+    await loadOrderDetail(orderId.value)
+  }
+  isTriggered.value = false
+}
+
 const handleConsult = (): void => {
   uni?.vibrateShort()
   handleContactUser(orderDetail.value?.craftsman_user)
 }
 
+// 取消订单
+const handleCancelOrder = async (): Promise<void> => {
+  uni?.vibrateShort()
+
+  // 确认取消
+  const res = await new Promise<boolean>((resolve) => {
+    wx.showModal({
+      title: '确认取消',
+      content: '确定要取消此订单吗？',
+      confirmText: '确定',
+      cancelText: '取消',
+      success: (result) => resolve(result.confirm),
+      fail: () => resolve(false),
+    })
+  })
+
+  if (!res) return
+
+  wx.showLoading({ title: '取消中...', mask: true })
+
+  try {
+    const { success, message } = await cancelOrderService({
+      orderId: Number(orderId.value),
+    })
+
+    wx.hideLoading()
+
+    if (!success) {
+      wx.showToast({
+        title: message || '取消失败，请重试',
+        icon: 'none',
+      })
+      return
+    }
+
+    wx.showToast({ title: '订单已取消', icon: 'success' })
+
+    // 刷新订单详情
+    if (orderId.value) {
+      await loadOrderDetail(orderId.value)
+    }
+
+    // 延迟返回上一页，让用户看到更新后的状态
+    setTimeout(() => {
+      wx.navigateBack()
+    }, 1500)
+  } catch (error: any) {
+    console.error('取消订单失败:', error)
+    wx.hideLoading()
+    wx.showToast({
+      title: '取消失败，请重试',
+      icon: 'none',
+    })
+  }
+}
+
 // 页面加载
 onLoad((options) => {
   const { id } = options ?? {}
+  orderId.value = id
   loadOrderDetail(id)
 })
 </script>
@@ -103,9 +210,31 @@ page {
   background: #fff;
   border-top: 1px solid #f0f0f0;
   flex-shrink: 0; // 防止按钮被压缩
+  display: flex;
+  gap: 12px;
+
+  .cancel-btn {
+    flex: 1;
+    height: 48px;
+    background: #fff;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+    border-radius: 24px;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    &:active {
+      opacity: 0.8;
+      background: #fff5f5;
+    }
+  }
 
   .consult-btn {
-    width: 100%;
+    flex: 1;
     height: 48px;
     background: linear-gradient(135deg, #00cec9, #00b4d8);
     color: #fff;
@@ -121,6 +250,12 @@ page {
     &:active {
       opacity: 0.8;
     }
+  }
+
+  // 当只有一个按钮时，占满宽度
+  button:only-child {
+    flex: 1;
+    width: 100%;
   }
 }
 </style>

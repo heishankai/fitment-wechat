@@ -1,7 +1,7 @@
 <template>
   <view class="calculate-price">
     <!-- 位置选择 -->
-    <view class="form-row" @click="showLocationPicker">
+    <view class="form-row" @click="initLocation">
       <view class="label">位置</view>
       <view class="value-container">
         <text class="value" :class="{ placeholder: !formData.location }">
@@ -49,10 +49,9 @@
     </view>
 
     <!-- 计算按钮 -->
-    <button class="calculate-btn" @click="handleCalculate">免费获取报价</button>
-
-    <!-- 位置选择弹窗 -->
-    <LocationPicker ref="locationPickerRef" @select="selectLocation" />
+    <button class="calculate-btn" @getphonenumber="handleCalculate" open-type="getPhoneNumber">
+      免费获取报价
+    </button>
 
     <!-- 户型选择弹窗 -->
     <RoomTypePicker ref="roomTypePickerRef" @select="selectRoomType" />
@@ -60,9 +59,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import LocationPicker from '@/components/location-picker.vue'
 import RoomTypePicker from './room-type-picker.vue'
+import { loginService, getUserPhoneNumberService, getReverseGeocodeService } from '../service'
+import { getUserLocation } from '@/utils'
 
 /** 表单数据 */
 const formData = ref({
@@ -78,12 +77,7 @@ const houseTypes = ref([
   { label: '老房', value: 'old' },
 ])
 
-/** 弹窗引用 */
-const locationPickerRef = ref<any>(null)
 const roomTypePickerRef = ref<any>(null)
-
-/** 打开位置选择器 */
-const showLocationPicker = (): void => locationPickerRef.value?.showPicker()
 
 /** 打开户型选择器 */
 const showRoomTypePicker = (): void => roomTypePickerRef.value?.showPicker()
@@ -91,23 +85,67 @@ const showRoomTypePicker = (): void => roomTypePickerRef.value?.showPicker()
 /** 房屋类型变化 */
 const handleHouseTypeChange = (e: any): void => (formData.value.houseType = e.detail.value)
 
-/** 选中位置 */
-const selectLocation = (location: any): void => {
-  console.log('选择位置：', location)
-  formData.value.location = location.city_name
+const initLocation = async (): Promise<void> => {
+  const location = await getUserLocation()
+  if (!location) return
+
+  const { success, data } = await getReverseGeocodeService(location)
+  if (!success) return
+  console.log(data, 'data')
+
+  formData.value.location = data?.address ?? ''
 }
 
 /** 选中户型 */
 const selectRoomType = (roomType: any): void => {
-  console.log('选中户型', roomType)
   formData.value.roomType = roomType.name
   roomTypePickerRef.value?.close()
 }
 
 /** 计算价格 */
-const handleCalculate = (): void => {
-  console.log(formData.value)
+const handleCalculate = async (e: any): Promise<void> => {
+  const { code: phoneCode, errMsg } = e?.detail ?? {}
+
+  if (errMsg !== 'getPhoneNumber:ok') {
+    wx.showToast({ title: '需要手机号授权才能登录', icon: 'none' })
+    return
+  }
+
+  wx.showLoading({ title: '获取报价中,后续将有工作人员联系您,请耐心等待...', mask: true })
+
+  try {
+    // 先获取登录凭证
+    const { code } = await new Promise<{ code: string }>((resolve, reject) => {
+      wx.login({
+        success: (res) => resolve(res),
+        fail: (err) => reject(err),
+      })
+    })
+
+    // 调用后端接口登录 获取用户信息
+    const { success, data } = await loginService({ code })
+
+    if (!success) return
+
+    // 调用后端接口解密手机号
+    const { success: phoneSuccess, data: phoneData } = await getUserPhoneNumberService({
+      code: phoneCode,
+      openid: data.openid,
+    })
+
+    if (!phoneSuccess) return
+
+    wx.setStorageSync('userInfo', phoneData)
+  } catch (error) {
+    console.error('登录失败:', error)
+  } finally {
+    wx.hideLoading()
+  }
 }
+
+onLoad(() => {
+  initLocation()
+})
 </script>
 
 <style lang="scss" scoped>

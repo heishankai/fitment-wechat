@@ -33,3 +33,41 @@ export const createOrGetRoomByCraftsman = (params: { craftsman_user_id: number }
     },
   })
 }
+
+/**
+ * 验收订单
+ */
+// eslint-disable-next-line
+export const acceptOrderWorkPriceService = (params: any): Promise<any> => {
+  return request({
+    method: 'POST',
+    url: `/order/accept-work-price`,
+    data: params,
+  })
+}
+
+/**
+ * 验收辅材清单
+ */
+export const acceptOrderMaterialsService = (params: {
+  order_id: number
+  materials_item: number
+}): Promise<any> => {
+  return request({
+    method: 'POST',
+    url: `/order/accept-materials`,
+    data: params,
+  })
+}
+
+/**
+ * 取消订单
+ */
+// eslint-disable-next-line
+export const cancelOrderService = (params: any): Promise<any> => {
+  return request({
+    method: 'POST',
+    url: `/order/cancel`,
+    data: params,
+  })
+}

@@ -11,13 +11,10 @@
       <case-list ref="caseListRef" />
     </scroll-view>
     <contact-service :scrollTop="scrollTop" />
-    <!-- <tabbar selected="2"></tabbar> -->
   </view>
 </template>
 
 <script setup lang="ts">
-// components
-// import tabbar from '@/components/custom-tab-bar.vue'
 import swiperHeader from './components/swiper-header.vue'
 import calculatePrice from './components/calculate-price.vue'
 import caseList from './components/case-list.vue'

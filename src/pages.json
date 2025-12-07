@@ -6,14 +6,6 @@
     }
   },
   "pages": [
-    // {
-    //   "path": "pages/home/index",
-    //   "style": {
-    //     "navigationBarTitleText": "首页",
-    //     "navigationStyle": "custom",
-    //     "disableScroll": true
-    //   }
-    // },
     {
       "path": "pages/house/index",
       "style": {
@@ -50,18 +42,11 @@
     "backgroundColor": "#fff"
   },
   "tabBar": {
-    // "custom": true,
     "color": "#999999",
     "selectedColor": "#00cec9",
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [
-      // {
-      //   "pagePath": "pages/home/index",
-      //   "iconPath": "static/tabbar/home.png",
-      //   "selectedIconPath": "static/tabbar/home_selected.png",
-      //   "text": "首页"
-      // },
       {
         "pagePath": "pages/house/index",
         "iconPath": "static/tabbar/home.png",

@@ -1,5 +1,6 @@
 <template>
-  <view class="address-list">
+  <empty-state v-if="!addressListData?.length" />
+  <view class="address-list" v-else>
     <view class="address-item" v-for="item in addressListData" :key="item.id">
       <view class="address-content">
         <view class="user-info">
@@ -22,7 +23,6 @@
       </view>
     </view>
   </view>
-  <empty-state v-if="!addressListData?.length" />
 </template>
 
 <script setup lang="ts">
