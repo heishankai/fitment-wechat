@@ -3,14 +3,25 @@
     <scroll-view class="scroll-view" scroll-y>
       <!-- 用户头像区域 -->
       <view class="avatar-section">
-        <view class="avatar-container" @click="handleAvatarEdit">
-          <image v-if="userInfo?.avatar" class="avatar" :src="userInfo.avatar" mode="aspectFill" />
-          <view v-else class="avatar default-avatar">
-            <uni-icons type="person" size="60" color="#ccc" />
+        <view class="avatar-wrapper">
+          <view class="avatar-container" @click="handleAvatarEdit">
+            <image
+              v-if="userInfo?.avatar"
+              class="avatar"
+              :src="userInfo.avatar"
+              mode="aspectFill"
+            />
+            <view v-else class="avatar default-avatar">
+              <uni-icons type="person" size="60" color="#ccc" />
+            </view>
+            <view class="avatar-edit-overlay">
+              <uni-icons type="camera" size="24" color="#fff" />
+              <text class="edit-text">点击更换头像</text>
+            </view>
           </view>
-          <view class="avatar-edit-overlay">
-            <uni-icons type="camera" size="24" color="#fff" />
-            <text class="edit-text">点击更换头像</text>
+          <!-- 右上角相机图标 -->
+          <view v-if="userInfo?.avatar" class="camera-badge">
+            <uni-icons type="camera" size="20" color="#fff" />
           </view>
         </view>
       </view>
@@ -94,11 +105,13 @@ const handleAvatarEdit = (): void => {
     sizeType: ['original'], // 不压缩
     sourceType: ['album', 'camera'], // // 相册+拍照
     success: async (res) => {
+      wx.showLoading({ title: '上传中...' })
       const { success, data } = await uploadFileService(res.tempFilePaths[0])
       if (!success) return
       const res1 = await updateUserInfoService(userInfo.value.id, { avatar: data?.url })
       if (!res1?.success) return
       saveUserInfo(res1?.data)
+      wx.hideLoading()
     },
   })
 }
@@ -182,6 +195,11 @@ page {
   justify-content: center;
   padding: 60rpx 0 40rpx;
 
+  .avatar-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
   .avatar-container {
     position: relative;
     width: 160rpx;
@@ -217,6 +235,7 @@ page {
       justify-content: center;
       opacity: 0;
       transition: opacity 0.3s;
+      z-index: 5;
 
       .edit-text {
         color: #fff;
@@ -228,6 +247,22 @@ page {
     &:active .avatar-edit-overlay {
       opacity: 1;
     }
+  }
+
+  .camera-badge {
+    position: absolute;
+    top: 0rpx;
+    right: 0rpx;
+    width: 48rpx;
+    height: 48rpx;
+    background: #00cec9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border: 3rpx solid #fff;
+    /* box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15); */
   }
 }
 
@@ -274,9 +309,11 @@ page {
 // 弹窗样式
 .popup-content {
   width: 600rpx;
+  max-width: 90vw;
   background: #fff;
   border-radius: 16rpx;
   padding: 40rpx;
+  box-sizing: border-box;
 
   .popup-title {
     font-size: 32rpx;
@@ -294,6 +331,7 @@ page {
     padding: 0 24rpx;
     font-size: 28rpx;
     margin-bottom: 32rpx;
+    box-sizing: border-box;
 
     &:focus {
       border-color: #00cec9;

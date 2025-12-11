@@ -57,7 +57,7 @@
         "pagePath": "pages/price/index",
         "iconPath": "static/tabbar/price.png",
         "selectedIconPath": "static/tabbar/price_selected.png",
-        "text": "工种"
+        "text": "工价"
       },
       {
         "pagePath": "pages/materials/index",
