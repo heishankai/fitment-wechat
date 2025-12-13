@@ -74,7 +74,7 @@
             class="acceptance-btn"
             :class="{ accepted: materialGroup.total_is_accepted }"
             :disabled="materialGroup.total_is_accepted"
-            @click="handleTotalAcceptMaterial(groupIndex)"
+            @click="handleTotalAcceptMaterial(materialGroup)"
           >
             <text>{{ materialGroup.total_is_accepted ? '已验收' : '确认验收' }}</text>
           </button>
@@ -96,10 +96,10 @@ const isLastCommodity = (materialGroup: any, index: number): boolean =>
   index === materialGroup.commodity_list.length - 1
 
 // 验收辅材清单
-const handleTotalAcceptMaterial = async (groupIndex: number): Promise<any> => {
+const handleTotalAcceptMaterial = async (material: any): Promise<any> => {
   const { success } = await acceptOrderMaterialsService({
     order_id: props?.orderDetail?.id,
-    materials_item: groupIndex,
+    materials_id: material.id,
   })
 
   if (success) {

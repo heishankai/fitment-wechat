@@ -38,17 +38,17 @@
 
       <!-- 辅材清单 -->
       <MaterialsListCard
-        v-if="orderDetail?.materials_list?.length"
-        :materials-list="orderDetail.materials_list"
+        v-if="materialsList?.length"
+        :materials-list="materialsList"
         :order-detail="orderDetail"
         @refresh="() => orderId && loadOrderDetail(orderId)"
       />
-      <view v-if="orderDetail?.materials_list?.length" class="divider-view"></view>
+      <view v-if="materialsList?.length" class="divider-view"></view>
 
       <!-- 施工进度 -->
       <ConstructionProgressCard
-        v-if="orderDetail?.construction_progress && orderDetail.construction_progress.length > 0"
-        :progress="orderDetail.construction_progress"
+        v-if="constructionProgress && constructionProgress.length > 0"
+        :progress="constructionProgress"
       />
     </scroll-view>
     <view class="footer">
@@ -83,7 +83,7 @@ import MaterialsListCard from './components/materials-list-card.vue'
 import CraftsmanCard from './components/craftsman-card.vue'
 import ConstructionProgressCard from './components/construction-progress-card.vue'
 import ContactService from '@/components/contact-service.vue'
-import { getOrderDetailService, cancelOrderService } from './service'
+import { getOrderDetailService, cancelOrderService, getConstructionProgressByOrderId, getMaterialsByOrderId } from './service'
 import { handleContactUser } from './utils'
 
 // 响应式数据
@@ -91,12 +91,26 @@ const orderDetail = ref<any>({})
 const scrollTop = ref<number>(0)
 const isTriggered = ref(false)
 const orderId = ref<number | string>('')
+const constructionProgress = ref<any[]>([])
+const materialsList = ref<any[]>([])
 
 // 加载订单详情
 const loadOrderDetail = async (id: number | string): Promise<void> => {
   const { success, data } = await getOrderDetailService(id)
   if (!success) return
   orderDetail.value = data
+
+  // 加载施工进度
+  const { success: progressSuccess, data: progressData } = await getConstructionProgressByOrderId(id)
+  if (progressSuccess) {
+    constructionProgress.value = progressData || []
+  }
+
+  // 加载辅材列表
+  const { success: materialsSuccess, data: materialsData } = await getMaterialsByOrderId(id)
+  if (materialsSuccess) {
+    materialsList.value = materialsData || []
+  }
 }
 
 // 处理滚动事件

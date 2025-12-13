@@ -51,11 +51,11 @@ export const acceptOrderWorkPriceService = (params: any): Promise<any> => {
  */
 export const acceptOrderMaterialsService = (params: {
   order_id: number
-  materials_item: number
+  materials_id: number
 }): Promise<any> => {
   return request({
     method: 'POST',
-    url: `/order/accept-materials`,
+    url: `/materials/accept`,
     data: params,
   })
 }
@@ -69,5 +69,25 @@ export const cancelOrderService = (params: any): Promise<any> => {
     method: 'POST',
     url: `/order/cancel`,
     data: params,
+  })
+}
+
+/**
+ * 根据订单ID获取施工进度
+ */
+export const getConstructionProgressByOrderId = (orderId: number | string): Promise<any> => {
+  return request({
+    method: 'GET',
+    url: `/construction-progress/order/${orderId}`,
+  })
+}
+
+/**
+ * 根据订单ID获取辅材列表
+ */
+export const getMaterialsByOrderId = (orderId: number | string): Promise<any> => {
+  return request({
+    method: 'GET',
+    url: `/materials/order/${orderId}`,
   })
 }
