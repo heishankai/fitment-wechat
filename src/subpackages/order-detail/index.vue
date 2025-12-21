@@ -19,31 +19,31 @@
       <CraftsmanCard v-if="orderDetail?.craftsman_user" :craftsman="orderDetail.craftsman_user" />
       <view v-if="orderDetail?.craftsman_user" class="divider-view"></view>
 
-      <!-- 费用明细 -->
+      <!-- 费用清单 -->
       <OrderCostCard
-        v-if="orderDetail?.work_prices"
+        v-if="orderDetail?.parent_work_price_groups?.length"
         :orderDetail="orderDetail"
         @refresh="() => orderId && loadOrderDetail(orderId)"
       />
-      <view v-if="orderDetail?.work_prices" class="divider-view"></view>
+      <view v-if="orderDetail?.parent_work_price_groups?.length" class="divider-view"></view>
 
       <!-- 子工价清单 -->
       <SubWorkPriceList
-        v-if="orderDetail?.sub_work_prices?.length"
-        :sub-work-prices="orderDetail.sub_work_prices"
+        v-if="subWorkPricesList?.length"
+        :sub-work-prices="subWorkPricesList"
         :order-detail="orderDetail"
         @refresh="() => orderId && loadOrderDetail(orderId)"
       />
-      <view v-if="orderDetail?.sub_work_prices?.length" class="divider-view"></view>
+      <view v-if="subWorkPricesList?.length" class="divider-view"></view>
 
       <!-- 辅材清单 -->
       <MaterialsListCard
-        v-if="materialsList?.length"
-        :materials-list="materialsList"
+        v-if="materialsList && materialsList.commodity_list?.length"
+        :materials-data="materialsList"
         :order-detail="orderDetail"
         @refresh="() => orderId && loadOrderDetail(orderId)"
       />
-      <view v-if="materialsList?.length" class="divider-view"></view>
+      <view v-if="materialsList && materialsList.commodity_list?.length" class="divider-view"></view>
 
       <!-- 施工进度 -->
       <ConstructionProgressCard
@@ -83,16 +83,23 @@ import MaterialsListCard from './components/materials-list-card.vue'
 import CraftsmanCard from './components/craftsman-card.vue'
 import ConstructionProgressCard from './components/construction-progress-card.vue'
 import ContactService from '@/components/contact-service.vue'
-import { getOrderDetailService, cancelOrderService, getConstructionProgressByOrderId, getMaterialsByOrderId } from './service'
+import {
+  getOrderDetailService,
+  cancelOrderService,
+  getConstructionProgressByOrderId,
+  getMaterialsByOrderId,
+  getSubWorkPricesByOrderId,
+} from './service'
 import { handleContactUser } from './utils'
 
 // 响应式数据
 const orderDetail = ref<any>({})
+const subWorkPricesList = ref<any[]>([])
 const scrollTop = ref<number>(0)
 const isTriggered = ref(false)
 const orderId = ref<number | string>('')
 const constructionProgress = ref<any[]>([])
-const materialsList = ref<any[]>([])
+const materialsList = ref<any>(null)
 
 // 加载订单详情
 const loadOrderDetail = async (id: number | string): Promise<void> => {
@@ -101,7 +108,8 @@ const loadOrderDetail = async (id: number | string): Promise<void> => {
   orderDetail.value = data
 
   // 加载施工进度
-  const { success: progressSuccess, data: progressData } = await getConstructionProgressByOrderId(id)
+  const { success: progressSuccess, data: progressData } =
+    await getConstructionProgressByOrderId(id)
   if (progressSuccess) {
     constructionProgress.value = progressData || []
   }
@@ -109,7 +117,14 @@ const loadOrderDetail = async (id: number | string): Promise<void> => {
   // 加载辅材列表
   const { success: materialsSuccess, data: materialsData } = await getMaterialsByOrderId(id)
   if (materialsSuccess) {
-    materialsList.value = materialsData || []
+    materialsList.value = materialsData || null
+  }
+
+  // 加载子工价列表
+  const { success: subWorkPricesSuccess, data: subWorkPricesData } =
+    await getSubWorkPricesByOrderId(id)
+  if (subWorkPricesSuccess) {
+    subWorkPricesList.value = subWorkPricesData || []
   }
 }
 
@@ -179,10 +194,6 @@ const handleCancelOrder = async (): Promise<void> => {
   } catch (error: any) {
     console.error('取消订单失败:', error)
     wx.hideLoading()
-    wx.showToast({
-      title: '取消失败，请重试',
-      icon: 'none',
-    })
   }
 }
 

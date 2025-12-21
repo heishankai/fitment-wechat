@@ -8,66 +8,88 @@
 
     <view class="sub-cost-list">
       <view
-        v-for="(subWorkPrice, subIndex) in subWorkPrices"
-        :key="subIndex"
+        v-for="(workGroup, groupIndex) in subWorkPrices"
+        :key="workGroup.work_group_id || groupIndex"
         class="sub-work-price-section"
       >
-        <!-- 子工价项列表 -->
+        <!-- 按工种分组显示 -->
         <view
-          v-for="(priceItem, priceIndex) in subWorkPrice.prices_list"
-          :key="priceItem.id"
-          class="cost-item"
-          :class="{ 'no-border': isLastPrice(subWorkPrice, priceIndex) }"
+          v-for="(group, kindIndex) in getGroupedByWorkKind(workGroup.sub_work_price_groups)"
+          :key="kindIndex"
+          class="work-kind-group"
         >
-          <view class="cost-item-left">
-            <text class="cost-label">{{ priceItem.work_title }}</text>
-            <view class="cost-meta">
-              <text class="cost-quantity">数量: {{ priceItem.quantity }}</text>
-              <text v-if="showMinimumPrice(priceItem)" class="cost-minimum">
-                最低价: ¥{{ formatCost(priceItem.minimum_price) }}
-              </text>
+          <!-- 工种标题 -->
+          <view class="work-kind-header">
+            <text class="work-kind-name">{{ group.workKindName }}</text>
+          </view>
+
+          <!-- 工价项列表 -->
+          <view
+            v-for="(priceItem, priceIndex) in group.items"
+            :key="priceItem.id"
+            class="cost-item-wrapper"
+            :class="{ 'no-border': priceIndex === group.items.length - 1 }"
+          >
+            <view class="cost-item">
+              <view class="cost-item-left">
+                <text class="cost-label">{{ priceItem.work_title }}</text>
+
+                <view class="cost-meta">
+                  <text class="cost-quantity"
+                    >数量: {{ priceItem.quantity }}/{{ priceItem.labour_cost_name }}</text
+                  >
+
+                  <text v-if="showMinimumPrice(priceItem)" class="cost-minimum">
+                    最低价: ¥{{ formatCost(priceItem.minimum_price) }}
+                  </text>
+                </view>
+              </view>
+
+              <text class="cost-value">¥{{ formatCost(priceItem.settlement_amount) }}</text>
+            </view>
+
+            <!-- 验收状态按钮 -->
+            <view class="acceptance-button-view">
+              <button
+                class="acceptance-btn-small wireman-btn"
+                :class="{ accepted: priceItem.is_accepted }"
+                :disabled="priceItem.is_accepted"
+                @click="handleAcceptSubWorkPrice(priceItem.id)"
+              >
+                <text :class="priceItem.is_accepted ? 'accepted' : 'pending'">
+                  {{ priceItem.is_accepted ? '已验收' : '确认验收' }}
+                </text>
+              </button>
             </view>
           </view>
-          <text class="cost-value">¥{{ formatCost(priceItem.work_price) }}</text>
         </view>
 
         <!-- 汇总区域 -->
         <view class="sub-price-summary">
           <view class="summary-row">
             <text class="summary-label">工价合计：</text>
-            <text class="summary-value">¥{{ formatCost(subWorkPrice.total_price) }}</text>
+            <text class="summary-value">¥{{ formatCost(workGroup.total_price) }}</text>
           </view>
 
           <view class="summary-row">
             <text class="summary-label">平台服务费：</text>
-            <text class="summary-value">¥{{ formatCost(subWorkPrice.total_service_fee) }}</text>
+            <text class="summary-value">¥{{ formatCost(workGroup.total_service_fee) }}</text>
           </view>
 
           <view class="summary-row final-total">
             <text class="summary-label">总计：</text>
             <text class="summary-value final-price">
-              ¥{{ formatCost(totalWithFee(subWorkPrice)) }}
+              ¥{{ formatCost(totalWithFee(workGroup)) }}
             </text>
           </view>
 
           <!-- 支付状态 -->
           <view class="tag-view">
             <uni-tag
-              :text="subWorkPrice.is_paid ? '已支付' : '待支付'"
-              :type="subWorkPrice.is_paid ? 'success' : 'warning'"
+              :text="workGroup.is_paid ? '已支付' : '待支付'"
+              :type="workGroup.is_paid ? 'success' : 'warning'"
             />
           </view>
-
-          <!-- 验收按钮 -->
-          <button
-            v-if="subWorkPrice.total_is_accepted !== undefined"
-            class="acceptance-btn"
-            :class="{ accepted: subWorkPrice.total_is_accepted }"
-            :disabled="subWorkPrice.total_is_accepted"
-            @click="handleTotalAcceptSubWorkPrice(subIndex)"
-          >
-            <text>{{ subWorkPrice.total_is_accepted ? '已验收' : '确认验收' }}</text>
-          </button>
         </view>
       </view>
     </view>
@@ -79,24 +101,53 @@ import customCard from '@/components/custom-card.vue'
 import { formatCost } from '@/utils'
 import { acceptOrderWorkPriceService } from '../service'
 
-const props = defineProps<{ subWorkPrices?: any[]; orderDetail?: any }>()
+defineProps<{ subWorkPrices?: any[]; orderDetail?: any }>()
 const emit = defineEmits<{ refresh: [] }>()
 
+// 按工种分组工价项
+const getGroupedByWorkKind = (items: any[]): any[] => {
+  const groups: Record<string, { workKindName: string; items: any[] }> = {}
+  const workPrices = items || []
+
+  workPrices.forEach((item: any) => {
+    const workKindName = item.work_kind_name || '其他'
+    if (!groups[workKindName]) {
+      groups[workKindName] = {
+        workKindName,
+        items: [],
+      }
+    }
+    groups[workKindName].items.push(item)
+  })
+
+  return Object.values(groups)
+}
+
 const showMinimumPrice = (item: any): boolean =>
-  item.is_set_minimum_price === '1' && item.minimum_price && item.quantity <= 1
+  item.is_set_minimum_price === '1' && item.minimum_price && parseFloat(item.quantity) <= 1
 
-const isLastPrice = (subWorkPrice: any, index: number): boolean =>
-  index === subWorkPrice.prices_list.length - 1
+const totalWithFee = (workGroup: any): number =>
+  Number(workGroup.total_price || 0) + Number(workGroup.total_service_fee || 0)
 
-const totalWithFee = (subWorkPrice: any): number =>
-  Number(subWorkPrice.total_price || 0) + Number(subWorkPrice.total_service_fee || 0)
+// 验收单个子工价项
+const handleAcceptSubWorkPrice = async (work_price_item_id: number): Promise<any> => {
+  // 二次确认
+  const res = await new Promise<boolean>((resolve) => {
+    wx.showModal({
+      title: '确认验收',
+      content: '确定要验收此项工价吗？',
+      confirmText: '确定',
+      cancelText: '取消',
+      confirmColor: '#00cec9',
+      success: (result) => resolve(result.confirm),
+      fail: () => resolve(false),
+    })
+  })
 
-// 验收订单
-const handleTotalAcceptSubWorkPrice = async (subIndex: number): Promise<any> => {
+  if (!res) return
+
   const { success } = await acceptOrderWorkPriceService({
-    order_id: props?.orderDetail?.id,
-    accepted_type: 'sub_work_prices',
-    prices_item: subIndex,
+    work_price_item_id,
   })
 
   if (success) {
@@ -130,55 +181,135 @@ const handleTotalAcceptSubWorkPrice = async (subIndex: number): Promise<any> => 
     background: #fafafa;
     border-radius: 12px;
     border: 1px solid #f0f0f0;
+    margin-bottom: 16px;
 
-    .cost-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #f0f0f0;
+    .work-kind-group {
+      margin-bottom: 16px;
 
-      &.no-border {
-        border-bottom: none;
+      &:last-child {
+        margin-bottom: 0;
       }
 
-      .cost-item-left {
-        flex: 1;
-        min-width: 0;
+      .work-kind-header {
+        padding: 8px 0;
+        margin-bottom: 8px;
+        border-bottom: 2px solid rgba(0, 206, 201, 0.2);
 
-        .cost-label {
+        .work-kind-name {
+          font-size: 16px;
+          font-weight: 600;
+          color: #00cec9;
+        }
+      }
+
+      .cost-item-wrapper {
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+
+        &.no-border {
+          border-bottom: none;
+        }
+      }
+
+      .cost-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .cost-item-left {
+          flex: 1;
+          min-width: 0;
+
+          .cost-label {
+            font-size: 15px;
+            color: #495057;
+            display: block;
+            margin-bottom: 4px;
+            word-break: break-all;
+          }
+
+          .cost-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 4px;
+
+            .cost-quantity {
+              font-size: 12px;
+              color: #999;
+            }
+
+            .cost-minimum {
+              font-size: 12px;
+              color: #ff6b6b;
+              font-weight: 500;
+            }
+          }
+        }
+
+        .cost-value {
           font-size: 15px;
-          color: #495057;
-          display: block;
-          margin-bottom: 4px;
-          word-break: break-all;
-        }
-
-        .cost-meta {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          margin-top: 4px;
-
-          .cost-quantity {
-            font-size: 12px;
-            color: #999;
-          }
-
-          .cost-minimum {
-            font-size: 12px;
-            color: #ff6b6b;
-            font-weight: 500;
-          }
+          font-weight: 600;
+          color: #2c3e50;
+          margin-left: 12px;
+          flex-shrink: 0;
         }
       }
 
-      .cost-value {
-        font-size: 15px;
-        font-weight: 600;
-        color: #2c3e50;
-        flex-shrink: 0;
-        margin-left: 12px;
+      .acceptance-button-view {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 16px;
+        width: fit-content;
+
+        .acceptance-btn-small {
+          display: inline-flex !important;
+          width: auto !important;
+
+          align-items: center;
+          justify-content: center;
+          border-radius: 6px;
+          border: none;
+          outline: none;
+          box-sizing: border-box;
+          font-size: 12px;
+          font-weight: 500;
+          flex-shrink: 0;
+
+          &::after {
+            border: none;
+          }
+
+          &.wireman-btn,
+          &.mason-btn {
+            background: rgba(255, 152, 0, 0.1);
+          }
+
+          &.accepted {
+            background: rgba(7, 193, 96, 0.1);
+          }
+
+          &:disabled {
+            opacity: 1;
+          }
+
+          &:active:not(:disabled) {
+            opacity: 0.8;
+          }
+
+          text {
+            font-size: 12px;
+            font-weight: 500;
+
+            &.accepted {
+              color: #07c160;
+            }
+
+            &.pending {
+              color: #ff9800;
+            }
+          }
+        }
       }
     }
 
@@ -264,7 +395,7 @@ const handleTotalAcceptSubWorkPrice = async (subIndex: number): Promise<any> => 
           border: none;
         }
 
-        &:active {
+        &:active:not(:disabled) {
           background: #fff3e0;
           transform: scale(0.98);
           box-shadow: 0 1px 4px rgba(255, 152, 0, 0.15);

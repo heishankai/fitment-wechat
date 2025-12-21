@@ -35,13 +35,13 @@ export const createOrGetRoomByCraftsman = (params: { craftsman_user_id: number }
 }
 
 /**
- * 验收订单
+ * 验收工价
  */
 // eslint-disable-next-line
 export const acceptOrderWorkPriceService = (params: any): Promise<any> => {
   return request({
     method: 'POST',
-    url: `/order/accept-work-price`,
+    url: `/order/accept-single-work-price`,
     data: params,
   })
 }
@@ -50,8 +50,7 @@ export const acceptOrderWorkPriceService = (params: any): Promise<any> => {
  * 验收辅材清单
  */
 export const acceptOrderMaterialsService = (params: {
-  order_id: number
-  materials_id: number
+  materialsId: number
 }): Promise<any> => {
   return request({
     method: 'POST',
@@ -89,5 +88,15 @@ export const getMaterialsByOrderId = (orderId: number | string): Promise<any> =>
   return request({
     method: 'GET',
     url: `/materials/order/${orderId}`,
+  })
+}
+
+/**
+ * 根据订单ID获取子工价列表
+ */
+export const getSubWorkPricesByOrderId = (orderId: number | string): Promise<any> => {
+  return request({
+    method: 'GET',
+    url: `/order/${orderId}/sub-groups`,
   })
 }

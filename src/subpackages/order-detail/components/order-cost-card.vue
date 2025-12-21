@@ -8,24 +8,32 @@
 
     <!-- 费用列表 -->
     <view class="cost-list">
+      <!-- 按工种分组显示 -->
       <view
-        v-for="(workPrice, index) in props.orderDetail?.work_prices"
-        :key="index"
+        v-for="(group, groupIndex) in groupedWorkPrices"
+        :key="groupIndex"
         class="work-price-section"
       >
+        <!-- 工种标题 -->
+        <view class="work-kind-header">
+          <text class="work-kind-name">{{ group.workKindName }}</text>
+        </view>
+
         <!-- 工价项列表 -->
         <view
-          v-for="(priceItem, priceIndex) in workPrice.prices_list"
+          v-for="(priceItem, priceIndex) in group.items"
           :key="priceItem.id"
           class="cost-item-wrapper"
-          :class="{ 'no-border': priceIndex === workPrice.prices_list.length - 1 }"
+          :class="{ 'no-border': priceIndex === group.items.length - 1 }"
         >
           <view class="cost-item">
             <view class="cost-item-left">
               <text class="cost-label">{{ priceItem.work_title }}</text>
 
               <view class="cost-meta">
-                <text class="cost-quantity">数量: {{ priceItem.quantity }}</text>
+                <text class="cost-quantity"
+                  >数量: {{ priceItem.quantity }}/{{ priceItem.labour_cost_name }}</text
+                >
 
                 <text v-if="showMinimum(priceItem)" class="cost-minimum">
                   最低价: ¥{{ formatCost(priceItem.minimum_price) }}
@@ -33,29 +41,16 @@
               </view>
             </view>
 
-            <text class="cost-value">¥{{ formatCost(priceItem.work_price) }}</text>
+            <text class="cost-value">¥{{ formatCost(priceItem.settlement_amount) }}</text>
           </view>
 
-          <!-- 验收状态按钮（简化后） -->
-          <view v-if="needShowAcceptButton(workPrice, priceItem)" class="acceptance-button-view">
+          <!-- 验收状态按钮 -->
+          <view class="acceptance-button-view">
             <button
-              v-if="isWireman(workPrice, priceItem)"
               class="acceptance-btn-small wireman-btn"
               :class="{ accepted: priceItem.is_accepted }"
               :disabled="priceItem.is_accepted"
-              @click="handleAcceptOrderWorkPrice(priceIndex)"
-            >
-              <text :class="priceItem.is_accepted ? 'accepted' : 'pending'">
-                {{ priceItem.is_accepted ? '已验收' : '确认验收' }}
-              </text>
-            </button>
-
-            <button
-              v-if="isMason(workPrice, priceItem)"
-              class="acceptance-btn-small mason-btn"
-              :class="{ accepted: priceItem.is_accepted }"
-              :disabled="priceItem.is_accepted"
-              @click="handleAcceptOrderWorkPrice(priceIndex)"
+              @click="handleAcceptOrderWorkPrice(priceItem.id)"
             >
               <text :class="priceItem.is_accepted ? 'accepted' : 'pending'">
                 {{ priceItem.is_accepted ? '已验收' : '确认验收' }}
@@ -63,52 +58,44 @@
             </button>
           </view>
         </view>
+      </view>
 
-        <!-- 工价汇总区域 -->
-        <view class="work-price-summary">
-          <view class="summary-row">
-            <text class="summary-label">工价合计：</text>
-            <text class="summary-value">¥{{ formatCost(workPrice?.total_price || 0) }}</text>
-          </view>
+      <!-- 工价汇总区域 -->
+      <view class="work-price-summary">
+        <view class="summary-row">
+          <text class="summary-label">工价合计：</text>
+          <text class="summary-value">¥{{ formatCost(props.orderDetail?.total_price || 0) }}</text>
+        </view>
 
-          <view class="summary-row">
-            <text class="summary-label">工长工费：</text>
-            <text class="summary-value">¥{{ formatCost(workPrice?.gangmaster_cost || 0) }}</text>
-          </view>
-
-          <view class="summary-row" v-if="workPrice?.craftsman_user_work_kind_name === '工长'">
-            <text class="summary-label">工长上门次数：</text>
-            <text class="summary-value">{{ workPrice?.visiting_service_num || 0 }}</text>
-          </view>
-
-          <view class="summary-row">
-            <text class="summary-label">平台服务费：</text>
-            <text class="summary-value"
-              >¥{{ formatCost(calculateGangmasterServiceFee(workPrice)) }}</text
-            >
-          </view>
-
-          <view class="summary-row final-total">
-            <text class="summary-label">总计：</text>
-            <text class="summary-value final-price"> ¥{{ calculateFinalTotal(workPrice) }} </text>
-          </view>
-
-          <view class="tag-view">
-            <uni-tag
-              :text="workPrice.is_paid ? '已支付' : '待支付'"
-              :type="workPrice.is_paid ? 'success' : 'warning'"
-            />
-          </view>
-
-          <button
-            v-if="workPrice.total_is_accepted !== undefined"
-            class="acceptance-btn"
-            :class="{ accepted: workPrice.total_is_accepted }"
-            :disabled="workPrice.total_is_accepted"
-            @click="handleTotalAcceptOrderWorkPrice"
+        <view class="summary-row">
+          <text class="summary-label">工长工费：</text>
+          <text class="summary-value"
+            >¥{{ formatCost(props.orderDetail?.gangmaster_cost || 0) }}</text
           >
-            <text>{{ workPrice.total_is_accepted ? '已验收' : '确认验收' }}</text>
-          </button>
+        </view>
+
+        <view class="summary-row" v-if="props.orderDetail?.work_kind_name === '工长'">
+          <text class="summary-label">工长上门次数：</text>
+          <text class="summary-value">{{ props.orderDetail?.visiting_service_num || 0 }}</text>
+        </view>
+
+        <view class="summary-row">
+          <text class="summary-label">平台服务费：</text>
+          <text class="summary-value"
+            >¥{{ formatCost(props.orderDetail?.total_service_fee || 0) }}</text
+          >
+        </view>
+
+        <view class="summary-row final-total">
+          <text class="summary-label">总计：</text>
+          <text class="summary-value final-price"> ¥{{ calculateFinalTotal() }} </text>
+        </view>
+
+        <view class="tag-view">
+          <uni-tag
+            :text="props.orderDetail?.is_paid ? '已支付' : '待支付'"
+            :type="props.orderDetail?.is_paid ? 'success' : 'warning'"
+          />
         </view>
       </view>
     </view>
@@ -116,6 +103,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import customCard from '@/components/custom-card.vue'
 import { formatCost } from '@/utils'
 import { acceptOrderWorkPriceService } from '../service'
@@ -123,12 +111,44 @@ import { acceptOrderWorkPriceService } from '../service'
 const props = defineProps<{ orderDetail: any }>()
 const emit = defineEmits<{ refresh: [] }>()
 
-// 验收订单
-const handleAcceptOrderWorkPrice = async (priceIndex: number): Promise<any> => {
+// 按工种分组工价项
+const groupedWorkPrices = computed(() => {
+  const groups: Record<string, { workKindName: string; items: any[] }> = {}
+  const workPrices = props.orderDetail?.parent_work_price_groups || []
+
+  workPrices.forEach((item: any) => {
+    const workKindName = item.work_kind_name || '其他'
+    if (!groups[workKindName]) {
+      groups[workKindName] = {
+        workKindName,
+        items: [],
+      }
+    }
+    groups[workKindName].items.push(item)
+  })
+
+  return Object.values(groups)
+})
+
+// 验收单个工价项
+const handleAcceptOrderWorkPrice = async (work_price_item_id: number): Promise<any> => {
+  // 二次确认
+  const res = await new Promise<boolean>((resolve) => {
+    wx.showModal({
+      title: '确认验收',
+      content: '确定要验收此项工价吗？',
+      confirmText: '确定',
+      cancelText: '取消',
+      confirmColor: '#00cec9',
+      success: (result) => resolve(result.confirm),
+      fail: () => resolve(false),
+    })
+  })
+
+  if (!res) return
+
   const { success } = await acceptOrderWorkPriceService({
-    order_id: props?.orderDetail?.id,
-    accepted_type: 'work_prices',
-    prices_item: priceIndex,
+    work_price_item_id,
   })
 
   if (success) {
@@ -136,54 +156,21 @@ const handleAcceptOrderWorkPrice = async (priceIndex: number): Promise<any> => {
     emit('refresh')
   }
 }
-
-// 验收订单
-const handleTotalAcceptOrderWorkPrice = async (): Promise<any> => {
-  const { success } = await acceptOrderWorkPriceService({
-    order_id: props?.orderDetail?.id,
-    accepted_type: 'work_prices',
-  })
-
-  if (success) {
-    wx.showToast({ title: '验收成功', icon: 'none' })
-    emit('refresh')
-  }
-}
-
-// 工长 + 水电
-const isWireman = (wp: any, item: any): boolean =>
-  wp.craftsman_user_work_kind_name === '工长' && item.work_kind?.work_kind_name === '水电'
-
-// 工长 + 泥瓦工
-const isMason = (wp: any, item: any): boolean =>
-  wp.craftsman_user_work_kind_name === '工长' && item.work_kind?.work_kind_name === '泥瓦工'
-
-// 是否显示任意验收按钮
-const needShowAcceptButton = (wp: any, item: any): boolean =>
-  isWireman(wp, item) || isMason(wp, item)
 
 // 最低价规则
 const showMinimum = (item: any): boolean =>
-  item.is_set_minimum_price === '1' && item.minimum_price && item.quantity <= 1
+  item.is_set_minimum_price === '1' && item.minimum_price && parseFloat(item.quantity) <= 1
 
-// 计算平台服务费
-const calculateGangmasterServiceFee = (group: any): number => {
-  const gangmasterCost = parseFloat(String(group?.gangmaster_cost || 0)) || 0
-  return gangmasterCost * 0.1 + (group?.total_service_fee || 0)
-}
-
-// 计算最终总价（工价合计 + 服务费 + 工长费用 ）
-const calculateFinalTotal = (group: any): number => {
+// 计算最终总价（工价合计 + 工长费用 + 平台服务费）
+const calculateFinalTotal = (): number => {
   // 施工费用
-  const totalPrice = parseFloat(String(group?.total_price || 0)) || 0
-  // 平台服务费
-  const serviceFee = parseFloat(String(group?.total_service_fee || 0)) || 0
+  const totalPrice = parseFloat(String(props.orderDetail?.total_price || 0)) || 0
   // 工长费用
-  const gangmasterCost = parseFloat(String(group?.gangmaster_cost || 0)) || 0
-  // 工长平台服务费 （10%）
-  const gangmasterServiceFee = gangmasterCost * 0.1
+  const gangmasterCost = parseFloat(String(props.orderDetail?.gangmaster_cost || 0)) || 0
+  // 平台服务费：
+  const serviceFee = parseFloat(String(props.orderDetail?.total_service_fee || 0)) || 0
 
-  return totalPrice + serviceFee + gangmasterCost + gangmasterServiceFee
+  return totalPrice + gangmasterCost + serviceFee
 }
 </script>
 
@@ -211,6 +198,18 @@ const calculateFinalTotal = (group: any): number => {
     background: #fafafa;
     border-radius: 12px;
     border: 1px solid #f0f0f0;
+
+    .work-kind-header {
+      padding: 8px 0;
+      margin-bottom: 8px;
+      border-bottom: 2px solid rgba(0, 206, 201, 0.2);
+
+      .work-kind-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #00cec9;
+      }
+    }
 
     .cost-item-wrapper {
       padding: 10px 0;
@@ -321,104 +320,104 @@ const calculateFinalTotal = (group: any): number => {
         }
       }
     }
+  }
 
-    .work-price-summary {
-      margin-top: 12px;
-      padding: 12px;
-      background: #fff;
-      border: 1px solid rgba(0, 206, 201, 0.1);
-      border-radius: 8px;
+  .work-price-summary {
+    margin-top: 12px;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid rgba(0, 206, 201, 0.1);
+    border-radius: 8px;
 
-      .summary-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 6px 0;
-        font-size: 14px;
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 14px;
 
-        &:not(:last-child) {
-          border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+      &:not(:last-child) {
+        border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+      }
+
+      .summary-label {
+        color: #646566;
+        font-weight: 500;
+      }
+
+      .summary-value {
+        color: #323233;
+        font-weight: 600;
+        font-size: 15px;
+
+        &.final-price {
+          font-size: 18px;
+          font-weight: 700;
+          color: #00cec9;
         }
+      }
+
+      &.final-total {
+        margin-top: 4px;
+        padding-top: 10px;
+        border-top: 2px solid rgba(0, 206, 201, 0.2);
+        border-bottom: none;
 
         .summary-label {
-          color: #646566;
-          font-weight: 500;
-        }
-
-        .summary-value {
-          color: #323233;
-          font-weight: 600;
           font-size: 15px;
-
-          &.final-price {
-            font-size: 18px;
-            font-weight: 700;
-            color: #00cec9;
-          }
-        }
-
-        &.final-total {
-          margin-top: 4px;
-          padding-top: 10px;
-          border-top: 2px solid rgba(0, 206, 201, 0.2);
-          border-bottom: none;
-
-          .summary-label {
-            font-size: 15px;
-            font-weight: 600;
-            color: #323233;
-          }
+          font-weight: 600;
+          color: #323233;
         }
       }
+    }
 
-      .tag-view {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 12px;
-        padding: 12px 0;
-        border-top: 1px solid #f0f0f0;
+    .tag-view {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+      padding: 12px 0;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .acceptance-btn {
+      width: 100%;
+      height: 48px;
+      background: #fff8f0;
+      color: #ff9800;
+      border: 1.5px solid #ff9800;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.1);
+      transition: all 0.3s ease;
+      outline: none;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+
+      &::after {
+        border: none;
       }
 
-      .acceptance-btn {
-        width: 100%;
-        height: 48px;
-        background: #fff8f0;
-        color: #ff9800;
-        border: 1.5px solid #ff9800;
-        border-radius: 12px;
-        font-size: 15px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.1);
-        transition: all 0.3s ease;
-        outline: none;
-        padding: 0;
-        margin: 0;
-        box-sizing: border-box;
+      &.accepted {
+        background: rgba(7, 193, 96, 0.1);
+        color: #07c160;
+        border-color: #07c160;
+        box-shadow: 0 2px 8px rgba(7, 193, 96, 0.1);
+      }
 
-        &::after {
-          border: none;
-        }
+      &:active:not(:disabled) {
+        background: #fff3e0;
+        transform: scale(0.98);
+        box-shadow: 0 1px 4px rgba(255, 152, 0, 0.15);
+      }
 
-        &.accepted {
-          background: rgba(7, 193, 96, 0.1);
-          color: #07c160;
-          border-color: #07c160;
-          box-shadow: 0 2px 8px rgba(7, 193, 96, 0.1);
-        }
-
-        &:active:not(:disabled) {
-          background: #fff3e0;
-          transform: scale(0.98);
-          box-shadow: 0 1px 4px rgba(255, 152, 0, 0.15);
-        }
-
-        &:disabled {
-          opacity: 0.8;
-        }
+      &:disabled {
+        opacity: 0.8;
       }
     }
   }

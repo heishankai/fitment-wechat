@@ -1,5 +1,5 @@
 <template>
-  <custom-card v-if="materialsList?.length">
+  <custom-card v-if="materialsData?.commodity_list?.length">
     <!-- 辅材清单标题 -->
     <view class="materials-section-header">
       <uni-icons type="shop" color="#00cec9" size="18" />
@@ -7,17 +7,13 @@
     </view>
 
     <view class="materials-list">
-      <view
-        v-for="(materialGroup, groupIndex) in materialsList"
-        :key="groupIndex"
-        class="material-group-section"
-      >
+      <view class="material-group-section">
         <!-- 商品列表 -->
         <view
-          v-for="(commodity, commodityIndex) in materialGroup.commodity_list"
+          v-for="(commodity, commodityIndex) in materialsData.commodity_list"
           :key="commodity.id"
           class="commodity-item"
-          :class="{ 'no-border': isLastCommodity(materialGroup, commodityIndex) }"
+          :class="{ 'no-border': isLastCommodity(commodityIndex) }"
         >
           <view class="commodity-content">
             <!-- 商品图片 -->
@@ -42,7 +38,22 @@
               </view>
             </view>
 
-            <text class="commodity-price">¥{{ formatCost(commodity.commodity_price) }}</text>
+            <view class="commodity-right">
+              <text class="commodity-price">¥{{ formatCost(commodity.settlement_amount) }}</text>
+              <!-- 单个商品验收按钮 -->
+              <view class="commodity-acceptance-view">
+                <button
+                  class="acceptance-btn-small"
+                  :class="{ accepted: commodity.is_accepted }"
+                  :disabled="commodity.is_accepted"
+                  @click="handleAcceptMaterial(commodity.id)"
+                >
+                  <text :class="commodity.is_accepted ? 'accepted' : 'pending'">
+                    {{ commodity.is_accepted ? '已验收' : '验收' }}
+                  </text>
+                </button>
+              </view>
+            </view>
           </view>
         </view>
 
@@ -50,34 +61,15 @@
         <view class="material-summary">
           <view class="summary-row">
             <text class="summary-label">辅材合计：</text>
-            <text class="summary-value">¥{{ formatCost(materialGroup.total_price) }}</text>
+            <text class="summary-value">¥{{ formatCost(materialsData.total_price) }}</text>
           </view>
 
           <view class="summary-row final-total">
             <text class="summary-label">总计：</text>
             <text class="summary-value final-price">
-              ¥{{ formatCost(materialGroup.total_price) }}
+              ¥{{ formatCost(materialsData.total_price) }}
             </text>
           </view>
-
-          <!-- 支付状态 -->
-          <view class="tag-view">
-            <uni-tag
-              :text="materialGroup.is_paid ? '已支付' : '待支付'"
-              :type="materialGroup.is_paid ? 'success' : 'warning'"
-            />
-          </view>
-
-          <!-- 验收按钮 -->
-          <button
-            v-if="materialGroup.total_is_accepted !== undefined"
-            class="acceptance-btn"
-            :class="{ accepted: materialGroup.total_is_accepted }"
-            :disabled="materialGroup.total_is_accepted"
-            @click="handleTotalAcceptMaterial(materialGroup)"
-          >
-            <text>{{ materialGroup.total_is_accepted ? '已验收' : '确认验收' }}</text>
-          </button>
         </view>
       </view>
     </view>
@@ -89,17 +81,33 @@ import customCard from '@/components/custom-card.vue'
 import { formatCost, previewImage } from '@/utils'
 import { acceptOrderMaterialsService } from '../service'
 
-const props = defineProps<{ materialsList?: any[]; orderDetail?: any }>()
+const props = defineProps<{ materialsData?: any; orderDetail?: any }>()
 const emit = defineEmits<{ refresh: [] }>()
 
-const isLastCommodity = (materialGroup: any, index: number): boolean =>
-  index === materialGroup.commodity_list.length - 1
+const isLastCommodity = (index: number): boolean => {
+  if (!props.materialsData?.commodity_list) return false
+  return index === props.materialsData.commodity_list.length - 1
+}
 
-// 验收辅材清单
-const handleTotalAcceptMaterial = async (material: any): Promise<any> => {
+// 验收单个辅材商品
+const handleAcceptMaterial = async (materialsId: number): Promise<any> => {
+  // 二次确认
+  const res = await new Promise<boolean>((resolve) => {
+    wx.showModal({
+      title: '确认验收',
+      content: '确定要验收此项辅材吗？',
+      confirmText: '确定',
+      cancelText: '取消',
+      confirmColor: '#00cec9',
+      success: (result) => resolve(result.confirm),
+      fail: () => resolve(false),
+    })
+  })
+
+  if (!res) return
+
   const { success } = await acceptOrderMaterialsService({
-    order_id: props?.orderDetail?.id,
-    materials_id: material.id,
+    materialsId,
   })
 
   if (success) {
@@ -187,12 +195,70 @@ const handleTotalAcceptMaterial = async (material: any): Promise<any> => {
           }
         }
 
-        .commodity-price {
-          font-size: 15px;
-          font-weight: 600;
-          color: #2c3e50;
+        .commodity-right {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 8px;
           flex-shrink: 0;
           margin-left: 8px;
+
+          .commodity-price {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+          }
+
+          .commodity-acceptance-view {
+            display: flex;
+            justify-content: flex-end;
+
+            .acceptance-btn-small {
+              display: inline-flex !important;
+              width: auto !important;
+              padding: 4px 12px;
+              align-items: center;
+              justify-content: center;
+              border-radius: 6px;
+              border: none;
+              outline: none;
+              box-sizing: border-box;
+              font-size: 12px;
+              font-weight: 500;
+              flex-shrink: 0;
+
+              &::after {
+                border: none;
+              }
+
+              background: rgba(255, 152, 0, 0.1);
+
+              &.accepted {
+                background: rgba(7, 193, 96, 0.1);
+              }
+
+              &:disabled {
+                opacity: 1;
+              }
+
+              &:active:not(:disabled) {
+                opacity: 0.8;
+              }
+
+              text {
+                font-size: 12px;
+                font-weight: 500;
+
+                &.accepted {
+                  color: #07c160;
+                }
+
+                &.pending {
+                  color: #ff9800;
+                }
+              }
+            }
+          }
         }
       }
     }
