@@ -16,12 +16,12 @@
       <cost-card :caseDetail="caseDetail" />
       <view class="divider-view"></view>
 
-      <!-- 施工现场 -->
-      <construction-section :caseDetail="caseDetail" />
-      <view class="divider-view"></view>
-
       <!-- 完工效果 -->
       <completion-section :caseDetail="caseDetail" />
+      <view class="divider-view"></view>
+
+      <!-- 施工现场 -->
+      <construction-section :caseDetail="caseDetail" />
     </scroll-view>
 
     <contact-service :scrollTop="scrollTop" />

@@ -43,6 +43,20 @@
     </view>
 
     <view class="room-section">
+      <section-header title="厨房" />
+      <view class="room-grid">
+        <view
+          v-for="(image, index) in props?.caseDetail?.kitchen_image"
+          :key="index"
+          class="room-item"
+          @click="previewImage(image, props.caseDetail?.kitchen_image)"
+        >
+          <image :src="image" mode="aspectFill" class="room-image" />
+        </view>
+      </view>
+    </view>
+
+    <view class="room-section">
       <section-header title="次卧" />
       <view class="room-grid">
         <view
@@ -90,7 +104,7 @@ const props = defineProps<{
 }
 
 .room-section {
-  margin-top: 16px;
+  margin-top: 24px;
 
   .room-grid {
     display: grid;
