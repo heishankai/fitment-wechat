@@ -60,3 +60,15 @@ export const getReverseGeocodeService = (params: Record<string, unknown>): Promi
     data: params,
   })
 }
+
+/**
+ * 获取按钮标题
+ * path :/independent-page-config/title
+ * method:GET
+ */
+export const getButtonTitleService = (): Promise<any> => {
+  return request({
+    method: 'GET',
+    url: '/independent-page-config/title',
+  })
+}
