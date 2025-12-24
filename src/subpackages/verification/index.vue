@@ -193,15 +193,15 @@ const onPay = async (orderData: any): Promise<void> => {
   // const paymentData = await getPaySign()
 
   // 检查是否有未使用的订单
-  const res =await checkUnusedOrderService()
-  if(res.success){
-    if(res.data.flag){
+  const res = await checkUnusedOrderService()
+  if (res.success) {
+    if (res.data.flag) {
       // 存在未使用的订单，直接使用
       console.log('存在未使用的订单', res.data.order_no)
       await createOrder(orderData, res.data.order_no)
       // 延迟1秒
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return;
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      return
     }
   }
 
@@ -232,8 +232,6 @@ const onPay = async (orderData: any): Promise<void> => {
     })
   }
   // console.log(data.paySign)
-
-  wx.hideLoading()
 }
 // 创建订单
 const createOrder = async (orderData: any, order_no: string): Promise<void> => {
@@ -242,7 +240,7 @@ const createOrder = async (orderData: any, order_no: string): Promise<void> => {
   try {
     // 创建订单
     const { success, data, message } = await createOrderService(orderData)
-    wx.hideLoading()
+
 
     if (success && data) {
       const body = {
@@ -261,16 +259,20 @@ const createOrder = async (orderData: any, order_no: string): Promise<void> => {
       wx.showToast({
         title: message || '发送失败，请重试',
         icon: 'none',
+        duration: 3500,
       })
     }
   } catch (error: any) {
     console.error('发送订单失败:', error)
-    wx.hideLoading()
+    console.log(error)
     wx.showToast({
-      title: '发送失败，请重试',
+      title: error.message,
       icon: 'none',
+      duration: 3500,
     })
+
   }
+  
 }
 
 // 立即预约验房
@@ -383,12 +385,15 @@ const handleVerificationSubmit = async (): Promise<void> => {
     onPay(verificationData)
   } catch (error: any) {
     console.error('预约验房失败:', error)
-    wx.hideLoading()
-    wx.showToast({
-      title: '预约失败，请重试',
-      icon: 'none',
-    })
+    setTimeout(() => {
+      wx.showToast({
+        title: '预约失败，请重试',
+        icon: 'none',
+      })
+    }, 700)
   }
+  await new Promise((resolve) => setTimeout(resolve, 3000))
+  wx.hideLoading()
 }
 
 // 页面加载
