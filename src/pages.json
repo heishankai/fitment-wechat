@@ -86,6 +86,13 @@
           }
         },
         {
+          "path": "verification/index",
+          "style": {
+            "navigationBarTitleText": "独立页面",
+            "disableScroll": true
+          }
+        },
+        {
           "path": "city-list/index",
           "style": {
             "navigationBarTitleText": "城市选择",
