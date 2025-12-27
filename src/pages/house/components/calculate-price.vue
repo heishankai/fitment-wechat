@@ -140,6 +140,9 @@ const handleCalculate = async (e: any): Promise<void> => {
   }
 
   try {
+    // // 开始显示 loading
+    wx.showLoading({ title: '加载中...', mask: true })
+
     // 先获取登录凭证
     const { code } = await new Promise<{ code: string }>((resolve, reject) => {
       wx.login({
@@ -151,7 +154,10 @@ const handleCalculate = async (e: any): Promise<void> => {
     // 调用后端接口登录 获取用户信息
     const { success, data } = await loginService({ code })
 
-    if (!success) return
+    if (!success) {
+      wx.hideLoading()
+      return
+    }
 
     // 调用后端接口解密手机号
     const { success: phoneSuccess, data: phoneData } = await getUserPhoneNumberService({
@@ -159,7 +165,10 @@ const handleCalculate = async (e: any): Promise<void> => {
       openid: data.openid,
     })
 
-    if (!phoneSuccess) return
+    if (!phoneSuccess) {
+      wx.hideLoading()
+      return
+    }
 
     wx.setStorageSync('userInfo', phoneData)
 
@@ -169,13 +178,19 @@ const handleCalculate = async (e: any): Promise<void> => {
       ...formData.value,
     })
 
-    if (!quoteSuccess) return
+    if (!quoteSuccess) {
+      wx.hideLoading()
+      return
+    }
 
-    wx.showLoading({ title: '获取报价中,后续将有工作人员联系您,请耐心等待...', mask: true })
+    // 成功获取报价，延迟隐藏 loading，让用户能看到提示信息
+    wx.hideLoading()
+
+    wx.showToast({ title: '提交成功，工作人员将尽快联系您', icon: 'none', duration: 2000 })
   } catch (error) {
     console.error('登录失败:', error)
-  } finally {
     wx.hideLoading()
+    wx.showToast({ title: '操作失败，请稍后重试', icon: 'none' })
   }
 }
 
