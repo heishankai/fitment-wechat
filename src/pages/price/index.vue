@@ -23,7 +23,7 @@
     <view class="content-wrapper">
       <!-- 左侧工种列表 -->
       <view class="left-sidebar">
-        <scroll-view scroll-y class="tabs-scroll">
+        <scroll-view scroll-y class="tabs-scroll" show-scrollbar>
           <view class="tabs-container">
             <view
               class="tab-item"
@@ -215,6 +215,18 @@ page {
 .tabs-scroll {
   flex: 1;
   overflow: hidden;
+
+  /* 隐藏滚动条 */
+  ::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+
+  /* 兼容微信小程序 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
 }
 
 .right-content {
@@ -268,6 +280,8 @@ page {
 
 /* 左侧工种列表 */
 .tabs-container {
+  margin-top: 12px;
+
   .tab-item {
     display: flex;
     align-items: center;
