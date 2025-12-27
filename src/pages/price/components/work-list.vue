@@ -303,7 +303,7 @@ $text-muted: #999;
   min-height: 100vh;
 
   .service-list {
-    padding: 16px;
+    padding: 12px 8px;
 
     .service-card {
       background: #fff;

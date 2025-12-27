@@ -60,7 +60,12 @@
 
 <script setup lang="ts">
 import RoomTypePicker from './room-type-picker.vue'
-import { loginService, getUserPhoneNumberService, getReverseGeocodeService } from '../service'
+import {
+  loginService,
+  getUserPhoneNumberService,
+  getReverseGeocodeService,
+  getQuoteService,
+} from '../service'
 import { getUserLocation } from '@/utils'
 
 /** 表单数据 */
@@ -104,14 +109,35 @@ const selectRoomType = (roomType: any): void => {
 
 /** 计算价格 */
 const handleCalculate = async (e: any): Promise<void> => {
+  console.log(formData, 'formData')
+
+  // 校验必填字段
+  if (!formData.value.location) {
+    wx.showToast({ title: '请选择位置', icon: 'none' })
+    return
+  }
+
+  if (!formData.value.houseType) {
+    wx.showToast({ title: '请选择房屋类型', icon: 'none' })
+    return
+  }
+
+  if (!formData.value.roomType) {
+    wx.showToast({ title: '请选择户型', icon: 'none' })
+    return
+  }
+
+  if (!formData.value.area) {
+    wx.showToast({ title: '请输入面积', icon: 'none' })
+    return
+  }
+
   const { code: phoneCode, errMsg } = e?.detail ?? {}
 
   if (errMsg !== 'getPhoneNumber:ok') {
     wx.showToast({ title: '需要手机号授权才能登录', icon: 'none' })
     return
   }
-
-  wx.showLoading({ title: '获取报价中,后续将有工作人员联系您,请耐心等待...', mask: true })
 
   try {
     // 先获取登录凭证
@@ -136,6 +162,16 @@ const handleCalculate = async (e: any): Promise<void> => {
     if (!phoneSuccess) return
 
     wx.setStorageSync('userInfo', phoneData)
+
+    // 调用后端接口获取报价
+    const { success: quoteSuccess } = await getQuoteService({
+      phone: phoneData?.phone,
+      ...formData.value,
+    })
+
+    if (!quoteSuccess) return
+
+    wx.showLoading({ title: '获取报价中,后续将有工作人员联系您,请耐心等待...', mask: true })
   } catch (error) {
     console.error('登录失败:', error)
   } finally {

@@ -5,7 +5,7 @@
         <uni-icons custom-prefix="iconfont" type="icon-weixiu" size="40" color="#fff" />
       </view>
       <view class="text">
-        <text class="title">工种工价</text>
+        <text class="title">工价查询</text>
         <text class="subtitle">透明报价·专业施工</text>
       </view>
     </view>

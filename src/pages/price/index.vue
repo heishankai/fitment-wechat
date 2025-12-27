@@ -1,10 +1,10 @@
 <template>
   <view class="container">
-    <!-- 顶部自定义导航栏 -->
-    <custom-navbar />
-
-    <!-- 搜索框 -->
-    <view class="search-section">
+    <!-- 顶部搜索框 -->
+    <view
+      class="search-section"
+      :style="{ paddingTop: safeArea.top + 'px', paddingRight: menuButtonWidth + 'px' }"
+    >
       <view class="search-box">
         <uni-icons type="search" size="18" color="#999" />
         <input
@@ -19,45 +19,42 @@
       </view>
     </view>
 
-    <!-- 工种Tabs标签页 -->
-    <view class="tabs-section">
-      <scroll-view scroll-x class="tabs-scroll" :scroll-left="tabsScrollLeft">
-        <view class="tabs-container">
-          <view
-            class="tab-item"
-            :class="{ active: selectedWorkKindId === null }"
-            hover-class="none"
-            @click="selectWorkKind(null)"
-          >
-            <text>全部</text>
+    <!-- 左右分栏布局 -->
+    <view class="content-wrapper">
+      <!-- 左侧工种列表 -->
+      <view class="left-sidebar">
+        <scroll-view scroll-y class="tabs-scroll">
+          <view class="tabs-container">
+            <view
+              class="tab-item"
+              v-for="kind in workKindList"
+              :key="kind.id"
+              :class="{ active: selectedWorkKindId === kind.id }"
+              hover-class="none"
+              @click="selectWorkKind(kind.id)"
+            >
+              <text>{{ kind.work_kind_name }}</text>
+            </view>
           </view>
-          <view
-            class="tab-item"
-            v-for="kind in workKindList"
-            :key="kind.id"
-            :class="{ active: selectedWorkKindId === kind.id }"
-            hover-class="none"
-            @click="selectWorkKind(kind.id)"
-          >
-            <text>{{ kind.work_kind_name }}</text>
-          </view>
-        </view>
-      </scroll-view>
-    </view>
+        </scroll-view>
+      </view>
 
-    <!-- 工价列表 -->
-    <scroll-view
-      enable-back-to-top
-      refresher-enabled
-      @refresherrefresh="onRefresherrefresh"
-      :refresher-triggered="isTriggered"
-      @scrolltolower="onScrolltolower"
-      class="scroll-view"
-      scroll-y
-      @scroll="onScroll"
-    >
-      <work-list ref="workListRef" />
-    </scroll-view>
+      <!-- 右侧工价列表 -->
+      <view class="right-content">
+        <scroll-view
+          enable-back-to-top
+          refresher-enabled
+          @refresherrefresh="onRefresherrefresh"
+          :refresher-triggered="isTriggered"
+          @scrolltolower="onScrolltolower"
+          class="scroll-view"
+          scroll-y
+          @scroll="onScroll"
+        >
+          <work-list ref="workListRef" />
+        </scroll-view>
+      </view>
+    </view>
     <contact-service :scrollTop="scrollTop" />
   </view>
 </template>
@@ -66,10 +63,16 @@
 import { ref, onMounted } from 'vue'
 import { debounce } from 'lodash-es'
 // components
-import customNavbar from './components/custom-navbar.vue'
 import workList from './components/work-list.vue'
 import contactService from '@/components/contact-service.vue'
 import { getWorkKindListService } from './service'
+
+// 获取屏幕边界到安全区域距离和胶囊按钮信息
+const systemInfo = wx.getSystemInfoSync()
+const { safeArea } = systemInfo
+const menuButtonInfo = wx.getMenuButtonBoundingClientRect()
+// 计算右侧需要留出的空间（胶囊按钮宽度 + 间距）
+const menuButtonWidth = systemInfo.windowWidth - menuButtonInfo.left + 8
 
 // 工种列表
 interface WorkKind {
@@ -79,7 +82,6 @@ interface WorkKind {
 
 const workKindList = ref<WorkKind[]>([])
 const selectedWorkKindId = ref<number | null>(null)
-const tabsScrollLeft = ref(0)
 const searchKeyword = ref('')
 const workListRef = ref<any>()
 const scrollTop = ref<number>(0)
@@ -91,6 +93,14 @@ const loadWorkKindList = async (): Promise<void> => {
     const { data, success } = await getWorkKindListService()
     if (success && data) {
       workKindList.value = data
+      // 默认选中"工长"
+      const foremanKind = data.find((kind: WorkKind) => kind.work_kind_name === '工长')
+      if (foremanKind) {
+        selectedWorkKindId.value = foremanKind.id
+        // 加载工长的工价列表
+        workListRef.value?.resetData()
+        workListRef.value?.loadWorkList('', foremanKind.id)
+      }
     }
   } catch (error) {
     console.error('加载工种列表失败:', error)
@@ -100,7 +110,7 @@ const loadWorkKindList = async (): Promise<void> => {
 // 选择工种
 // 注意：工种列表中的 work_kind_name 对应工价列表中 work_kind.label
 // 筛选时使用 work_kind.id 来匹配工价列表中的 work_kind.id
-const selectWorkKind = (kindId: number | null): void => {
+const selectWorkKind = (kindId: number): void => {
   selectedWorkKindId.value = kindId
   // 重置并重新加载工价列表
   workListRef.value?.resetData()
@@ -187,24 +197,53 @@ page {
   flex-direction: column;
 }
 
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.left-sidebar {
+  width: 100px;
+  background: #fff;
+  border-right: 1px solid $border-color;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tabs-scroll {
+  flex: 1;
+  overflow: hidden;
+}
+
+.right-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .scroll-view {
   flex: 1;
   overflow: hidden;
 }
 
-/* 搜索框 */
+/* 顶部搜索框 */
 .search-section {
-  padding: 16px;
-  background: #fff;
-  border-bottom: 1px solid $border-color;
+  padding: 12px 16px;
+  padding-bottom: 12px;
+  background: linear-gradient(135deg, $primary-color 0%, #00b4d8 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 
   .search-box {
     display: flex;
     align-items: center;
-    background: #f5f5f5;
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
-    padding: 12px 16px;
+    padding: 10px 16px;
     gap: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
     .search-input {
       flex: 1;
@@ -227,47 +266,33 @@ page {
   }
 }
 
-/* Tabs标签页 */
-.tabs-section {
-  background: #fff;
-  border-bottom: 1px solid $border-color;
-  padding: 0 16px;
-
-  .tabs-scroll {
+/* 左侧工种列表 */
+.tabs-container {
+  .tab-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+    border-radius: 6px;
+    color: #666;
+    font-size: 13px;
+    font-weight: 400;
     white-space: nowrap;
-    width: 100%;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    border: none;
+    min-height: 40px;
+    text-align: center;
 
-    .tabs-container {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 0;
+    &.active {
+      background: $primary-color;
+      color: #fff;
+      font-weight: 500;
+    }
 
-      .tab-item {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 12px 28px;
-        border-radius: 24px;
-        background: #f5f5f5;
-        color: $text-secondary;
-        font-size: 15px;
-        font-weight: 500;
-        white-space: nowrap;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-
-        &.active {
-          background: $primary-color;
-          color: #fff;
-          font-weight: 600;
-        }
-
-        text {
-          line-height: 1;
-        }
-      }
+    text {
+      line-height: 1.4;
     }
   }
 }
