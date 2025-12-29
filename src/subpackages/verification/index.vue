@@ -5,8 +5,8 @@
     :scroll-with-animation="true"
     :show-scrollbar="false"
     scroll-y
-  >
-    <view class="content">
+  > 
+    <view class="content" v-if="showcontent">
       <view style="background: #fff; padding: 20rpx">
         <view class="rich-text-container">
           <MpHtml :content="richContent" :preview-img="false" :show-img-menu="false" />
@@ -20,8 +20,8 @@
     </view>
 
     <!-- 预约验房表单弹窗 -->
-    <uni-popup ref="verificationFormRef" type="bottom" :safe-area="false" :z-index="9999">
-      <view class="form-popup">
+
+      <view class="form-popup" v-if="!showcontent">
         <!-- 顶部装饰 -->
         <view class="header-bg">
           <view class="header-decoration"></view>
@@ -126,7 +126,7 @@
           </button>
         </view>
       </view>
-    </uni-popup>
+
 
     <!-- 户型选择器 -->
     <RoomTypePicker ref="roomTypePickerRef" @select="handleRoomTypeSelect" />
@@ -154,6 +154,8 @@ const richContent = ref<string>('')
 const price = ref<number>(0)
 const verificationFormRef = ref<any>(null)
 const roomTypePickerRef = ref<any>(null)
+
+const showcontent = ref<boolean>(true)
 
 // 表单数据（支持联系工匠和验房）
 const formData = <any>ref({
@@ -278,6 +280,7 @@ const createOrder = async (orderData: any, order_no: string): Promise<void> => {
 // 立即预约验房
 const onOrderVerification = (): void => {
   verificationFormRef.value?.open()
+  showcontent.value = false;
 }
 // 获取地址
 const getLocation = async (): Promise<void> => {
@@ -341,6 +344,7 @@ const loadPageInfo = async (): Promise<void> => {
 
 const hideVerificationForm = (): void => {
   verificationFormRef.value?.close()
+  showcontent.value = true;
 }
 
 // 显示户型选择器

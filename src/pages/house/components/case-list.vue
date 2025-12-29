@@ -115,11 +115,11 @@ const waterfallColumns = computed(() => {
 const getCaseListData = async (): Promise<void> => {
   if (finish.value || loading.value) {
     if (finish.value) {
-      uni.showToast({
-        icon: 'none',
-        title: '没有更多数据~',
-        duration: 1500,
-      })
+      // uni.showToast({
+      //   icon: 'none',
+      //   title: '没有更多数据~',
+      //   duration: 1500,
+      // })
     }
     return
   }
