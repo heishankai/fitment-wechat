@@ -196,6 +196,13 @@
             "navigationBarTitleText": "联系工匠",
             "disableScroll": true
           }
+        },
+        {
+          "path": "work-price-materials/index",
+          "style": {
+            "navigationBarTitleText": "辅材清单",
+            "disableScroll": true
+          }
         }
       ]
     }

@@ -27,7 +27,7 @@
       />
       <view v-if="orderDetail?.parent_work_price_groups?.length" class="divider-view"></view>
 
-      <!-- 子工价清单 -->
+      <!-- 子费用清单 -->
       <SubWorkPriceList
         v-if="subWorkPricesList?.length"
         :sub-work-prices="subWorkPricesList"

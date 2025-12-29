@@ -13,7 +13,7 @@
           v-for="(commodity, commodityIndex) in materialsData.commodity_list"
           :key="commodity.id"
           class="commodity-item"
-          :class="{ 'no-border': isLastCommodity(commodityIndex) }"
+          :class="{ 'no-border': isLastCommodity(Number(commodityIndex)) }"
         >
           <view class="commodity-content">
             <!-- 商品图片 -->
@@ -46,7 +46,7 @@
                   class="acceptance-btn-small"
                   :class="{ accepted: commodity.is_accepted }"
                   :disabled="commodity.is_accepted"
-                  @click="handleAcceptMaterial(commodity.id)"
+                  @click="handleAcceptMaterial(Number(commodity.id))"
                 >
                   <text :class="commodity.is_accepted ? 'accepted' : 'pending'">
                     {{ commodity.is_accepted ? '已验收' : '验收' }}
@@ -70,6 +70,14 @@
               ¥{{ formatCost(materialsData.total_price) }}
             </text>
           </view>
+
+          <!-- 一键验收按钮 -->
+          <view v-if="hasUnacceptedMaterials" class="batch-acceptance-view">
+            <button class="batch-acceptance-btn" @click="handleBatchAccept">
+              <uni-icons type="checkmarkempty" size="16" color="#fff" />
+              <text class="batch-acceptance-text">一键验收</text>
+            </button>
+          </view>
         </view>
       </view>
     </view>
@@ -77,9 +85,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import customCard from '@/components/custom-card.vue'
 import { formatCost, previewImage } from '@/utils'
-import { acceptOrderMaterialsService } from '../service'
+import { acceptOrderMaterialsService, batchAcceptOrderMaterialsService } from '../service'
 
 const props = defineProps<{ materialsData?: any; orderDetail?: any }>()
 const emit = defineEmits<{ refresh: [] }>()
@@ -88,6 +97,14 @@ const isLastCommodity = (index: number): boolean => {
   if (!props.materialsData?.commodity_list) return false
   return index === props.materialsData.commodity_list.length - 1
 }
+
+// 检查是否有未验收的辅材
+const hasUnacceptedMaterials = computed(() => {
+  if (!props.materialsData?.commodity_list) return false
+  return props.materialsData.commodity_list.some(
+    (commodity: any) => !commodity.is_accepted
+  )
+})
 
 // 验收单个辅材商品
 const handleAcceptMaterial = async (materialsId: number): Promise<any> => {
@@ -113,6 +130,69 @@ const handleAcceptMaterial = async (materialsId: number): Promise<any> => {
   if (success) {
     wx.showToast({ title: '验收成功', icon: 'none' })
     emit('refresh')
+  }
+}
+
+// 一键验收所有辅材
+const handleBatchAccept = async (): Promise<void> => {
+  uni?.vibrateShort()
+
+  if (!props.materialsData?.commodity_list) {
+    wx.showToast({ title: '辅材信息错误', icon: 'none' })
+    return
+  }
+
+  // 收集未验收的辅材ID
+  const unacceptedMaterialsIds = props.materialsData.commodity_list
+    .filter((commodity: any) => !commodity.is_accepted)
+    .map((commodity: any) => Number(commodity.id))
+
+  if (unacceptedMaterialsIds.length === 0) {
+    wx.showToast({ title: '没有未验收的辅材', icon: 'none' })
+    return
+  }
+
+  // 二次确认
+  const res = await new Promise<boolean>((resolve) => {
+    wx.showModal({
+      title: '确认一键验收',
+      content: `确定要验收 ${unacceptedMaterialsIds.length} 项辅材吗？`,
+      confirmText: '确定',
+      cancelText: '取消',
+      confirmColor: '#00cec9',
+      success: (result) => resolve(result.confirm),
+      fail: () => resolve(false),
+    })
+  })
+
+  if (!res) return
+
+  wx.showLoading({ title: '验收中...', mask: true })
+
+  try {
+    const { success, message } = await batchAcceptOrderMaterialsService({
+      materialsIds: unacceptedMaterialsIds,
+    })
+
+    wx.hideLoading()
+
+    if (!success) {
+      wx.showToast({
+        title: message || '验收失败，请重试',
+        icon: 'none',
+      })
+      return
+    }
+
+    wx.showToast({ title: '验收成功', icon: 'success' })
+    emit('refresh')
+  } catch (error: any) {
+    console.error('批量验收失败:', error)
+    wx.hideLoading()
+    wx.showToast({
+      title: '验收失败，请重试',
+      icon: 'none',
+    })
   }
 }
 </script>
@@ -360,6 +440,49 @@ const handleAcceptMaterial = async (materialsId: number): Promise<any> => {
 
         &:disabled {
           opacity: 0.8;
+        }
+      }
+
+      .batch-acceptance-view {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #f0f0f0;
+
+        .batch-acceptance-btn {
+          width: 100%;
+          height: 48px;
+          background: linear-gradient(135deg, #00cec9, #00b4d8);
+          color: #fff;
+          border: none;
+          border-radius: 12px;
+          font-size: 15px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          box-shadow: 0 2px 8px rgba(0, 206, 201, 0.2);
+          transition: all 0.3s ease;
+          outline: none;
+          padding: 0;
+          margin: 0;
+          box-sizing: border-box;
+
+          &::after {
+            border: none;
+          }
+
+          &:active {
+            opacity: 0.9;
+            transform: scale(0.98);
+            box-shadow: 0 1px 4px rgba(0, 206, 201, 0.3);
+          }
+
+          .batch-acceptance-text {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+          }
         }
       }
     }

@@ -93,4 +93,21 @@ page {
   margin: 0;
   padding: 0;
 }
+
+/* 微信小程序 button 默认样式重置 */
+/* #ifdef MP-WEIXIN */
+button {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  font-size: inherit;
+  line-height: inherit;
+  box-sizing: border-box;
+}
+
+button::after {
+  border: none;
+}
+/* #endif */
 </style>

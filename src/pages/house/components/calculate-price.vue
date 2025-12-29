@@ -109,8 +109,6 @@ const selectRoomType = (roomType: any): void => {
 
 /** 计算价格 */
 const handleCalculate = async (e: any): Promise<void> => {
-  console.log(formData, 'formData')
-
   // 校验必填字段
   if (!formData.value.location) {
     wx.showToast({ title: '请选择位置', icon: 'none' })

@@ -60,6 +60,19 @@ export const acceptOrderMaterialsService = (params: {
 }
 
 /**
+ * 批量验收辅材清单
+ */
+export const batchAcceptOrderMaterialsService = (params: {
+  materialsIds: number[]
+}): Promise<any> => {
+  return request({
+    method: 'POST',
+    url: `/materials/batch-accept`,
+    data: params,
+  })
+}
+
+/**
  * 取消订单
  */
 // eslint-disable-next-line
@@ -98,5 +111,28 @@ export const getSubWorkPricesByOrderId = (orderId: number | string): Promise<any
   return request({
     method: 'GET',
     url: `/order/${orderId}/sub-groups`,
+  })
+}
+
+/**
+ * 根据工价项ID获取辅材列表
+ */
+export const getMaterialsByWorkPriceItemId = (workPriceItemId: number | string): Promise<any> => {
+  return request({
+    method: 'GET',
+    url: `/materials/work-price-item/${workPriceItemId}`,
+  })
+}
+
+/**
+ * 根据工价项ID和分配的工匠ID获取辅材列表
+ */
+export const getMaterialsByWorkPriceItemIdAndCraftsman = (
+  workPriceItemId: number | string,
+  assignedCraftsmanId: number | string
+): Promise<any> => {
+  return request({
+    method: 'GET',
+    url: `/work-price-item/${workPriceItemId}/materials/craftsman/${assignedCraftsmanId}`,
   })
 }
