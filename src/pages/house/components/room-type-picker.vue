@@ -11,7 +11,6 @@
         </view>
       </view>
 
-      <!-- 滚动区域（城市列表） -->
       <scroll-view
         class="picker-scroll"
         scroll-y

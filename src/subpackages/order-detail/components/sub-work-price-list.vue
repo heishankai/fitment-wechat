@@ -48,17 +48,33 @@
               <text class="cost-value">¥{{ formatCost(priceItem.settlement_amount) }}</text>
             </view>
 
-            <!-- 验收状态按钮 -->
-            <view class="acceptance-button-view">
+            <!-- 验收状态按钮和辅材查看按钮 -->
+            <view class="action-buttons-view">
               <button
-                class="acceptance-btn-small wireman-btn"
+                class="action-btn acceptance-btn"
                 :class="{ accepted: priceItem.is_accepted }"
                 :disabled="priceItem.is_accepted"
                 @click="handleAcceptSubWorkPrice(priceItem.id)"
               >
-                <text :class="priceItem.is_accepted ? 'accepted' : 'pending'">
+                <uni-icons 
+                  type="checkmarkempty" 
+                  :size="14" 
+                  :color="priceItem.is_accepted ? '#07c160' : '#ff9800'" 
+                />
+                <text class="action-btn-text" :class="priceItem.is_accepted ? 'accepted' : 'pending'">
                   {{ priceItem.is_accepted ? '已验收' : '确认验收' }}
                 </text>
+              </button>
+              
+              <!-- 查看辅材按钮（当 assigned_craftsman_id 存在时显示） -->
+              <button
+                v-if="priceItem.assigned_craftsman_id"
+                class="action-btn materials-btn"
+                @click="handleViewMaterials(priceItem)"
+              >
+                <uni-icons type="shop" size="14" color="#00cec9" />
+                <text class="action-btn-text">查看辅材</text>
+                <uni-icons type="right" size="12" color="#00cec9" />
               </button>
             </view>
           </view>
@@ -101,7 +117,7 @@ import customCard from '@/components/custom-card.vue'
 import { formatCost } from '@/utils'
 import { acceptOrderWorkPriceService } from '../service'
 
-defineProps<{ subWorkPrices?: any[]; orderDetail?: any }>()
+const props = defineProps<{ subWorkPrices?: any[]; orderDetail?: any }>()
 const emit = defineEmits<{ refresh: [] }>()
 
 // 按工种分组工价项
@@ -154,6 +170,15 @@ const handleAcceptSubWorkPrice = async (work_price_item_id: number): Promise<any
     wx.showToast({ title: '验收成功', icon: 'none' })
     emit('refresh')
   }
+}
+
+// 跳转到辅材清单页面
+const handleViewMaterials = (priceItem: any): void => {
+  uni?.vibrateShort()
+  const assignedCraftsmanId = priceItem.assigned_craftsman_id || ''
+  uni.navigateTo({
+    url: `/subpackages/work-price-materials/index?workPriceItemId=${priceItem.id}&orderId=${props.orderDetail?.id || ''}&assignedCraftsmanId=${assignedCraftsmanId}`,
+  })
 }
 </script>
 
@@ -256,57 +281,93 @@ const handleAcceptSubWorkPrice = async (work_price_item_id: number): Promise<any
         }
       }
 
-      .acceptance-button-view {
+      .action-buttons-view {
         display: flex;
         justify-content: flex-end;
-        margin-top: 16px;
-        width: fit-content;
+        align-items: center;
+        gap: 10px;
+        margin-top: 12px;
+        width: 100%;
 
-        .acceptance-btn-small {
+        .action-btn {
           display: inline-flex !important;
-          width: auto !important;
-
           align-items: center;
           justify-content: center;
-          border-radius: 6px;
+          gap: 6px;
+          padding: 6px 12px;
+          border-radius: 8px;
           border: none;
           outline: none;
           box-sizing: border-box;
-          font-size: 12px;
-          font-weight: 500;
+          font-size: 13px;
+          font-weight: 600;
           flex-shrink: 0;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 
           &::after {
             border: none;
           }
 
-          &.wireman-btn,
-          &.mason-btn {
-            background: rgba(255, 152, 0, 0.1);
-          }
-
-          &.accepted {
-            background: rgba(7, 193, 96, 0.1);
+          &:active:not(:disabled) {
+            transform: scale(0.96);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
           }
 
           &:disabled {
             opacity: 1;
           }
 
-          &:active:not(:disabled) {
-            opacity: 0.8;
+          .action-btn-text {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+          }
+        }
+
+        .materials-btn {
+          background: linear-gradient(135deg, rgba(0, 206, 201, 0.1), rgba(0, 180, 216, 0.08));
+          border: 1px solid rgba(0, 206, 201, 0.25);
+          box-shadow: 0 2px 4px rgba(0, 206, 201, 0.08);
+
+          &:active {
+            background: linear-gradient(135deg, rgba(0, 206, 201, 0.15), rgba(0, 180, 216, 0.12));
+            box-shadow: 0 1px 2px rgba(0, 206, 201, 0.12);
           }
 
-          text {
-            font-size: 12px;
-            font-weight: 500;
+          .action-btn-text {
+            color: #00cec9;
+          }
+        }
+
+        .acceptance-btn {
+          background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.08));
+          border: 1px solid rgba(255, 152, 0, 0.25);
+          box-shadow: 0 2px 4px rgba(255, 152, 0, 0.08);
+
+          &:active:not(:disabled) {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 152, 0, 0.12));
+            box-shadow: 0 1px 2px rgba(255, 152, 0, 0.12);
+          }
+
+          &.accepted {
+            background: linear-gradient(135deg, rgba(7, 193, 96, 0.1), rgba(7, 193, 96, 0.08));
+            border: 1px solid rgba(7, 193, 96, 0.25);
+            box-shadow: 0 2px 4px rgba(7, 193, 96, 0.08);
+
+            &:active {
+              background: linear-gradient(135deg, rgba(7, 193, 96, 0.15), rgba(7, 193, 96, 0.12));
+              box-shadow: 0 1px 2px rgba(7, 193, 96, 0.12);
+            }
+          }
+
+          .action-btn-text {
+            &.pending {
+              color: #ff9800;
+            }
 
             &.accepted {
               color: #07c160;
-            }
-
-            &.pending {
-              color: #ff9800;
             }
           }
         }
