@@ -1,24 +1,7 @@
 <template>
   <view class="swiper-header">
-    <view
-      class="custom-navbar"
-      :class="{ 'navbar-scrolled': isScrolled }"
-      :style="{ paddingTop: safeArea.top + 'px' }"
-    >
-      <view class="navbar-content">
-        <view class="address" @click="navigateToCityList">
-          <view class="icon-wrapper" :class="{ 'icon-dark': isScrolled }">
-            <uni-icons type="location" :color="isScrolled ? '#333' : '#fff'" size="18" />
-          </view>
-          <text :class="{ 'text-dark': isScrolled }">{{ city_name }}</text>
-        </view>
-        <view class="title" :class="{ 'text-dark': isScrolled }">叮当优+</view>
-        <view class="placeholder"></view>
-      </view>
-    </view>
     <!-- 轮播图 -->
-    <!-- 只在有数据时才渲染swiper，避免初始化闪动 -->
-    <view v-if="swiperList.length === 0" class="swiper-placeholder">
+    <view v-if="!swiperList?.length" class="swiper-placeholder">
       <view class="placeholder-content">
         <uni-icons type="image" size="40" color="#ddd" />
       </view>
@@ -62,11 +45,7 @@
 import { previewImage } from '@/utils'
 import { getSwiperListService } from '../service'
 
-// 获取屏幕边界到安全区域距离
-const { safeArea } = wx.getSystemInfoSync()
-
 const current = ref(0)
-const city_name = ref('杭州市')
 const isScrolled = ref(false)
 const swiperList = ref<string[]>([])
 const imageLoaded = ref(false) // 图片加载状态
@@ -83,11 +62,6 @@ const handleScroll = (e: any): void => {
 defineExpose({
   handleScroll,
 })
-
-// 加载城市信息
-const loadCity = (): void => {
-  city_name.value = wx.getStorageSync('selectedCity')?.city_name ?? '杭州市'
-}
 
 // swiper 切换事件
 const onSwiperChange = (e: any): void => {
@@ -128,19 +102,8 @@ const loadSwiperList = async (): Promise<void> => {
   }
 }
 
-// 跳转城市选择页面
-const navigateToCityList = (): void => {
-  wx.navigateTo({
-    url: '/subpackages/city-list/index',
-  })
-}
-
 onLoad(() => {
   loadSwiperList()
-})
-
-onShow(() => {
-  loadCity()
 })
 </script>
 
@@ -152,76 +115,6 @@ onShow(() => {
   background-color: #fff;
   position: relative;
   overflow: hidden; // 防止内容溢出导致闪烁
-
-  .custom-navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    color: #fff;
-    padding: 0px 12px 0px 12px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
-
-    &.navbar-scrolled {
-      background-color: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .navbar-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 42px;
-      line-height: 42px;
-    }
-
-    .address {
-      gap: 2px;
-      display: flex;
-      align-items: center;
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      color: #fff;
-      transition: color 0.3s ease;
-
-      .icon-wrapper {
-        transition: color 0.3s ease;
-        color: #fff;
-
-        &.icon-dark {
-          color: #333;
-        }
-      }
-
-      .text-dark {
-        color: #333;
-      }
-    }
-
-    .title {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-      transition: color 0.3s ease;
-
-      &.text-dark {
-        color: #333;
-      }
-    }
-
-    .placeholder {
-      width: 100px;
-    }
-  }
 
   // 占位内容
   .swiper-placeholder {

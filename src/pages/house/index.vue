@@ -51,7 +51,7 @@ const onScrollToLower = (): void => {
 // 跳转到1元验房页面
 const goToVerification = (): void => {
   uni.navigateTo({
-    url: '/subpackages/verification/index'
+    url: '/subpackages/verification/index',
   })
 }
 
