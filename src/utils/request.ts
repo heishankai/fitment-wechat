@@ -1,8 +1,6 @@
-export const BASEURL = 'http://127.0.0.1:3000' // 本地地址
-export const WEBVIEWURL = 'http://localhost:5173/fitment-h5' // 本地webView地址
-
-// export const BASEURL = 'https://zjiangyun.cn/api' // 线上接口地址
-// export const WEBVIEWURL = 'https://zjiangyun.cn/fitment-h5' // 线上webView地址
+// 从环境变量获取配置
+export const BASEURL = import.meta.env.VITE_BASE_URL 
+export const WEBVIEWURL = import.meta.env.VITE_WEBVIEW_URL 
 
 // 上传文件地址
 export const uploadFileUrl = BASEURL + '/upload'

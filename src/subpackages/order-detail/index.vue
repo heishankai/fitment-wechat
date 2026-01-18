@@ -1,55 +1,21 @@
 <template>
   <view class="container">
-    <scroll-view
-      enable-back-to-top
-      :scroll-with-animation="true"
-      :show-scrollbar="false"
-      scroll-y
-      class="scroll-view"
-      @scroll="onScroll"
-      refresher-enabled
-      :refresher-triggered="isTriggered"
-      @refresherrefresh="onRefresherrefresh"
-    >
-      <!-- 订单基本信息 -->
-      <OrderInfoCard :orderDetail="orderDetail" />
-      <view class="divider-view"></view>
+    <scroll-view enable-back-to-top :scroll-with-animation="true" :show-scrollbar="false" scroll-y class="scroll-view"
+      @scroll="onScroll" refresher-enabled :refresher-triggered="isTriggered" @refresherrefresh="onRefresherrefresh">
+      <view class="scroll-content">
+        <!-- 工匠信息 -->
+        <order-card v-if="orderDetail?.craftsman_user" :craftsman="orderDetail?.craftsman_user" :order-id="orderId"
+          :order-no="orderDetail?.order_no" />
 
-      <!-- 工匠信息 -->
-      <CraftsmanCard v-if="orderDetail?.craftsman_user" :craftsman="orderDetail.craftsman_user" />
-      <view v-if="orderDetail?.craftsman_user" class="divider-view"></view>
+        <!-- 费用清单 -->
+        <order-cost-card v-if="orderDetail?.parent_work_price_groups?.length" :orderDetail="orderDetail"
+          @refresh="() => orderId && loadOrderDetail(orderId)" />
 
-      <!-- 费用清单 -->
-      <OrderCostCard
-        v-if="orderDetail?.parent_work_price_groups?.length"
-        :orderDetail="orderDetail"
-        @refresh="() => orderId && loadOrderDetail(orderId)"
-      />
-      <view v-if="orderDetail?.parent_work_price_groups?.length" class="divider-view"></view>
+        <!-- 子费用清单 -->
+        <SubWorkPriceList v-if="subWorkPricesList?.length" :sub-work-prices="subWorkPricesList"
+          :order-detail="orderDetail" @refresh="() => orderId && loadOrderDetail(orderId)" />
 
-      <!-- 子费用清单 -->
-      <SubWorkPriceList
-        v-if="subWorkPricesList?.length"
-        :sub-work-prices="subWorkPricesList"
-        :order-detail="orderDetail"
-        @refresh="() => orderId && loadOrderDetail(orderId)"
-      />
-      <view v-if="subWorkPricesList?.length" class="divider-view"></view>
-
-      <!-- 辅材清单 -->
-      <MaterialsListCard
-        v-if="materialsList && materialsList.commodity_list?.length"
-        :materials-data="materialsList"
-        :order-detail="orderDetail"
-        @refresh="() => orderId && loadOrderDetail(orderId)"
-      />
-      <view v-if="materialsList && materialsList.commodity_list?.length" class="divider-view"></view>
-
-      <!-- 施工进度 -->
-      <ConstructionProgressCard
-        v-if="constructionProgress && constructionProgress.length > 0"
-        :progress="constructionProgress"
-      />
+      </view>
     </scroll-view>
     <view class="footer">
       <!-- 待接单状态：显示取消订单和联系工匠按钮 -->
@@ -62,11 +28,9 @@
         </button>
       </template>
       <!-- 其他状态：只显示联系工匠按钮 -->
-      <template v-else>
-        <button class="consult-btn" @click="handleConsult">
-          <uni-icons type="chat" size="20" color="#fff" />联系工匠
-        </button>
-      </template>
+      <button class="consult-btn" @click="handleConsult" v-else>
+        <uni-icons type="chat" size="20" color="#fff" />联系工匠
+      </button>
     </view>
 
     <ContactService :scrollTop="scrollTop" />
@@ -76,18 +40,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import OrderInfoCard from './components/order-info-card.vue'
 import OrderCostCard from './components/order-cost-card.vue'
 import SubWorkPriceList from './components/sub-work-price-list.vue'
-import MaterialsListCard from './components/materials-list-card.vue'
-import CraftsmanCard from './components/craftsman-card.vue'
-import ConstructionProgressCard from './components/construction-progress-card.vue'
+import OrderCard from './components/order-card.vue'
 import ContactService from '@/components/contact-service.vue'
 import {
   getOrderDetailService,
   cancelOrderService,
   getConstructionProgressByOrderId,
-  getMaterialsByOrderId,
   getSubWorkPricesByOrderId,
 } from './service'
 import { handleContactUser } from './utils'
@@ -99,13 +59,14 @@ const scrollTop = ref<number>(0)
 const isTriggered = ref(false)
 const orderId = ref<number | string>('')
 const constructionProgress = ref<any[]>([])
-const materialsList = ref<any>(null)
 
 // 加载订单详情
 const loadOrderDetail = async (id: number | string): Promise<void> => {
   const { success, data } = await getOrderDetailService(id)
   if (!success) return
   orderDetail.value = data
+
+  // console.log('orderDetail', JSON.stringify(orderDetail.value))
 
   // 加载施工进度
   const { success: progressSuccess, data: progressData } =
@@ -114,18 +75,13 @@ const loadOrderDetail = async (id: number | string): Promise<void> => {
     constructionProgress.value = progressData || []
   }
 
-  // 加载辅材列表
-  const { success: materialsSuccess, data: materialsData } = await getMaterialsByOrderId(id)
-  if (materialsSuccess) {
-    materialsList.value = materialsData || null
-  }
-
   // 加载子工价列表
   const { success: subWorkPricesSuccess, data: subWorkPricesData } =
     await getSubWorkPricesByOrderId(id)
   if (subWorkPricesSuccess) {
     subWorkPricesList.value = subWorkPricesData || []
   }
+  console.log('subWorkPricesList', JSON.stringify(subWorkPricesList.value))
 }
 
 // 处理滚动事件
@@ -221,13 +177,14 @@ page {
 .scroll-view {
   flex: 1;
   overflow: hidden;
-  padding: 16px;
   box-sizing: border-box;
 }
 
-.divider-view {
-  height: 16px;
+.scroll-content {
+  padding: 20rpx;
+  box-sizing: border-box;
 }
+
 
 // 底部按钮
 .footer {

@@ -85,7 +85,7 @@ const props = defineProps<{ caseDetail: any }>()
     font-weight: 600;
 
     &.old {
-      background: linear-gradient(135deg, #6c757d, #495057);
+      background: #f275b3;
     }
   }
 }
@@ -93,7 +93,8 @@ const props = defineProps<{ caseDetail: any }>()
 /* ✅ 改良后的布局 */
 .property-details {
   display: flex;
-  justify-content: space-between; /* 两边对齐 */
+  justify-content: space-between;
+  /* 两边对齐 */
   align-items: flex-start;
   width: 100%;
 
@@ -104,7 +105,8 @@ const props = defineProps<{ caseDetail: any }>()
     justify-content: flex-start;
 
     &:last-child {
-      justify-content: flex-end; /* 右边的靠右对齐 */
+      justify-content: flex-end;
+      /* 右边的靠右对齐 */
     }
 
     .detail-icon {

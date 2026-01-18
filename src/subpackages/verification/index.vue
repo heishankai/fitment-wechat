@@ -249,7 +249,7 @@ const createOrder = async (orderData: any, order_no: string): Promise<void> => {
       }
       await setOrderUsedService(body)
       wx.showToast({
-        title: '订单已发送，请前往我的订单查看',
+        title: '订单已发送，请前往我的工地查看',
         icon: 'none',
       })
       wx.navigateTo({

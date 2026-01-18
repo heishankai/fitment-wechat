@@ -1,37 +1,52 @@
 <template>
   <view class="container">
-    <!-- 可滚动的内容区域 -->
     <scroll-view class="scroll-view" scroll-y @scroll="onScroll" @scrolltolower="onScrollToLower">
       <!-- 轮播图 -->
-      <swiper-header ref="swiperHeaderRef" />
-      <!-- 计算价格 -->
-      <calculate-price />
-      <!-- 1元验房 -->
-      <view class="verification-section">
-        <view class="verification-btn" @click="goToVerification">
-          <text class="verification-text">{{ verificationBtnTitle }}</text>
-        </view>
+      <view class="swiper-container">
+        <base-swiper :list="swiper_image_list" />
       </view>
-      <!-- 推荐案例 -->
-      <view class="section-title">推荐案例</view>
-      <case-list ref="caseListRef" />
+
+      <!-- 新房装修和旧房改造 -->
+      <view class="renovation-wrapper">
+        <renovation-cards />
+
+        <!-- 往期案例 -->
+        <view class="case-section">
+          <text class="case-title">往期案例</text>
+          <text class="case-desc">为您推荐优质装修案例</text>
+        </view>
+        <case-list ref="caseListRef" />
+      </view>
     </scroll-view>
     <contact-service :scrollTop="scrollTop" />
+
+    <!-- 首页弹窗 -->
+    <activity-popup />
   </view>
 </template>
 
 <script setup lang="ts">
-import swiperHeader from './components/swiper-header.vue'
-import calculatePrice from './components/calculate-price.vue'
+import BaseSwiper from '@/components/base-swiper.vue'
 import caseList from './components/case-list.vue'
 import contactService from '@/components/contact-service.vue'
-import { getButtonTitleService } from './service'
+import RenovationCards from './components/renovation-cards.vue'
+import ActivityPopup from './components/activity-popup.vue'
+import { getButtonTitleService, getSwiperListService } from './service'
 
 // 获取组件的引用
 const swiperHeaderRef = ref()
 const caseListRef = ref()
 const scrollTop = ref<number>(0)
+const swiper_image_list = ref<string[]>([])
 
+// 加载轮播图
+const loadSwiperList = async (): Promise<void> => {
+  const { success, data } = await getSwiperListService()
+
+  if (success) {
+    swiper_image_list.value = (data || []).map((item: any) => item?.swiper_image)
+  }
+}
 // 按钮标题
 const verificationBtnTitle = ref<string>('1元验房')
 
@@ -48,13 +63,6 @@ const onScrollToLower = (): void => {
   caseListRef.value?.getMore()
 }
 
-// 跳转到1元验房页面
-const goToVerification = (): void => {
-  uni.navigateTo({
-    url: '/subpackages/verification/index',
-  })
-}
-
 // 初始化按钮标题
 const initVerificationBtnTitle = async (): Promise<void> => {
   const { success, data } = await getButtonTitleService()
@@ -65,6 +73,7 @@ const initVerificationBtnTitle = async (): Promise<void> => {
 
 onLoad(() => {
   initVerificationBtnTitle()
+  loadSwiperList()
 })
 </script>
 
@@ -72,33 +81,37 @@ onLoad(() => {
 page {
   height: 100%;
   overflow: hidden;
+  background: #f8f9fa;
 }
 
 .container {
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .scroll-view {
   flex: 1;
+  height: 0;
   overflow: hidden;
 }
 
-.verification-section {
-  padding: 20rpx;
+.swiper-container {
+  width: 100%;
+  height: 760rpx;
+  min-height: 760rpx;
+  margin-bottom: -40rpx;
+  position: relative;
+  z-index: 1;
 }
 
-.verification-btn {
-  width: 100%;
-  height: 100rpx;
-  background: linear-gradient(135deg, #ff6b6b, #ff8e53);
-  border-radius: 50rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4rpx 15rpx rgba(255, 107, 107, 0.3);
-  transition: all 0.3s ease;
+.renovation-wrapper {
+  background: #fff;
+  position: relative;
+  z-index: 2;
+  padding-top: 20rpx;
+  border-radius: 38rpx 38rpx 0 0;
+  overflow: hidden;
 }
 
 .verification-btn:active {
@@ -106,16 +119,22 @@ page {
   box-shadow: 0 2rpx 10rpx rgba(255, 107, 107, 0.3);
 }
 
-.verification-text {
-  font-size: 18px;
-  font-weight: 600;
-  color: #ffffff;
-}
+/* 精选案例 */
+.case-section {
+  padding: 40rpx 20rpx 20rpx;
 
-.section-title {
-  padding: 16rpx;
-  font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
+  .case-title {
+    display: block;
+    font-size: 44rpx;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 12rpx;
+  }
+
+  .case-desc {
+    display: block;
+    font-size: 28rpx;
+    color: #999;
+  }
 }
 </style>

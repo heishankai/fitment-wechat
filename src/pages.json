@@ -7,6 +7,13 @@
   },
   "pages": [
     {
+      "path": "pages/welcome/index",
+      "style": {
+        "navigationBarTitleText": "欢迎页",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/house/index",
       "style": {
         "navigationBarTitleText": "首页",
@@ -30,8 +37,7 @@
     {
       "path": "pages/mine/index",
       "style": {
-        "navigationBarTitleText": "我的",
-        "navigationStyle": "custom"
+        "navigationBarTitleText": "我的"
       }
     }
   ],
@@ -137,7 +143,7 @@
         {
           "path": "orders/index",
           "style": {
-            "navigationBarTitleText": "我的订单",
+            "navigationBarTitleText": "我的工地",
             "disableScroll": true
           }
         },
@@ -201,6 +207,22 @@
           "path": "work-price-materials/index",
           "style": {
             "navigationBarTitleText": "辅材清单",
+            "disableScroll": true
+          }
+        },
+        {
+          "path": "construction-progress/index",
+          "style": {
+            "navigationBarTitleText": "施工进度",
+            "disableScroll": true
+          }
+        },
+        {
+          "path": "renovation-form/index",
+          "style": {
+            "navigationBarTitleText": "装修预约",
+            "navigationBarBackgroundColor": "#00cec9",
+            "navigationBarTextStyle": "white",
             "disableScroll": true
           }
         }

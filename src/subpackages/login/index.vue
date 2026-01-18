@@ -12,15 +12,13 @@
       <!-- Logo区域 -->
       <view class="logo-section">
         <view class="logo-container">
-          <image
-            class="avatar"
-            src="https://api.dicebear.com/7.x/miniavs/svg?seed=test"
-            mode="scaleToFill"
-          />
+          <image class="avatar"
+            src="https://din-dang-zhi-zhuang.oss-cn-hangzhou.aliyuncs.com/uploads/1768655245625_bt9k9m_1763214991038_s366qe_logo.png"
+            mode="scaleToFill" />
           <view class="logo-ring"></view>
         </view>
         <text class="welcome-text">欢迎使用</text>
-        <text class="app-name">叮当优+</text>
+        <text class="app-name">智慧装</text>
         <text class="subtitle">让装修变得更简单</text>
       </view>
 
@@ -145,10 +143,12 @@ page {
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20px) rotate(180deg);
   }
@@ -203,6 +203,7 @@ page {
     transform: scale(1);
     opacity: 1;
   }
+
   100% {
     transform: scale(1.1);
     opacity: 0;

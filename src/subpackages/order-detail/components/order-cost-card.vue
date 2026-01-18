@@ -1,149 +1,196 @@
 <template>
-  <custom-card>
-    <!-- 卡片头部 -->
-    <view class="card-header">
-      <uni-icons type="wallet" color="#00cec9" size="20" />
-      <text class="card-title">费用清单</text>
-    </view>
-
-    <!-- 费用列表 -->
-    <view class="cost-list">
-      <!-- 按工种分组显示 -->
-      <view
-        v-for="(group, groupIndex) in groupedWorkPrices"
-        :key="groupIndex"
-        class="work-price-section"
-      >
-        <!-- 工种标题 -->
-        <view class="work-kind-header">
-          <text class="work-kind-name">{{ group.workKindName }}</text>
+  <card :show-bottom-margin="true">
+    <section_header title="施工清单" color="#0a0a0a" :showBar="false">
+      <template #right>
+        <view v-if="orderDetail?.order_type !== 'gangmaster'" class="header-materials-btn"
+          @click="handleViewMaterialsByOrderId()">
+          <text class="btn-text">辅材清单</text>
+          <uni-icons type="right" size="14" color="#00cec9" />
         </view>
+      </template>
+    </section_header>
 
-        <!-- 工价项列表 -->
-        <view
-          v-for="(priceItem, priceIndex) in group.items"
-          :key="priceItem.id"
-          class="cost-item-wrapper"
-          :class="{ 'no-border': priceIndex === group.items.length - 1 }"
-        >
-          <view class="cost-item">
-            <view class="cost-item-left">
-              <text class="cost-label">{{ priceItem.work_title }}</text>
-
-              <view class="cost-meta">
-                <text class="cost-quantity"
-                  >数量: {{ priceItem.quantity }}/{{ priceItem.labour_cost_name }}</text
-                >
-
-                <text v-if="showMinimum(priceItem)" class="cost-minimum">
-                  最低价: ¥{{ formatCost(priceItem.minimum_price) }}
-                </text>
-              </view>
+    <view v-for="(group, groupIndex) in groupedWorkPrices" :key="groupIndex" class="cost-item">
+      <view class="group-item-header" v-if="orderDetail?.order_type === 'gangmaster'">
+        <view class="header-left">
+          <view class="avatar-wrapper">
+            <image v-if="group.craftsman?.avatar" class="avatar" :src="group.craftsman.avatar" mode="aspectFill" />
+            <view v-else class="avatar-placeholder">
+              <uni-icons type="person" size="20" color="#00cec9" />
             </view>
-
-            <text class="cost-value">¥{{ formatCost(priceItem.settlement_amount) }}</text>
           </view>
-
-          <!-- 验收状态按钮和辅材查看按钮 -->
-          <view class="action-buttons-view">
-            <button
-              class="action-btn acceptance-btn"
-              :class="{ accepted: priceItem.is_accepted }"
-              :disabled="priceItem.is_accepted"
-              @click="handleAcceptOrderWorkPrice(priceItem.id)"
-            >
-              <uni-icons
-                type="checkmarkempty"
-                :size="14"
-                :color="priceItem.is_accepted ? '#07c160' : '#ff9800'"
-              />
-              <text class="action-btn-text" :class="priceItem.is_accepted ? 'accepted' : 'pending'">
-                {{ priceItem.is_accepted ? '已验收' : '确认验收' }}
-              </text>
-            </button>
-
-            <!-- 查看辅材按钮（当 assigned_craftsman_id 存在时显示） -->
-            <button
-              v-if="priceItem.assigned_craftsman_id"
-              class="action-btn materials-btn"
-              @click="handleViewMaterials(priceItem)"
-            >
-              <uni-icons type="shop" size="14" color="#00cec9" />
-              <text class="action-btn-text">查看辅材</text>
-              <uni-icons type="right" size="12" color="#00cec9" />
-            </button>
+          <view class="header-info">
+            <view class="craftsman-name">{{ group.craftsmanName }}</view>
+            <view class="phone-info">
+              <uni-icons type="phone" size="14" color="#6b7280" />
+              <text class="phone-number">{{ formatPhone(group.craftsman?.phone) || '暂无' }}</text>
+            </view>
           </view>
+        </view>
+        <view v-if="group.items[0]?.assigned_craftsman_id" class="materials-btn"
+          @click="handleViewMaterials(group.items[0])">
+          <text class="btn-text">辅材清单</text>
+          <uni-icons type="right" size="14" color="#00cec9" />
         </view>
       </view>
 
-      <!-- 工价汇总区域 -->
-      <view class="work-price-summary">
-        <view class="summary-row">
-          <text class="summary-label">工价合计：</text>
-          <text class="summary-value">¥{{ formatCost(props.orderDetail?.total_price || 0) }}</text>
+      <view class="group-item" v-for="(item, itemIndex) in group.items" :key="itemIndex">
+        <view class="row">
+          <view class="title">{{ item?.work_title }}</view>
+          <view class="price">¥{{ formatCost(item?.work_price) }}</view>
         </view>
-
-        <view class="summary-row">
-          <text class="summary-label">工长工费：</text>
-          <text class="summary-value"
-            >¥{{ formatCost(props.orderDetail?.gangmaster_cost || 0) }}</text
-          >
+        <view class="group-item-container">
+          <view>
+            <view class="unit-price"> 数量：{{ item?.quantity }} </view>
+            <view class="unit-price">单位：{{ item?.labour_cost_name }}</view>
+            <view v-if="item?.is_set_minimum_price === '1'" class="minimum-price-badge">
+              最低起步价：¥{{ formatCost(item?.minimum_price) }}
+            </view>
+          </view>
+          <button class="accept-btn" :class="{ accepted: item?.is_accepted }" :disabled="item?.is_accepted"
+            @click="handleAcceptOrderWorkPrice(item?.id)">
+            <uni-icons v-if="item?.is_accepted" type="checkmarkempty" size="12" color="#07c160" />
+            <text>{{ item?.is_accepted ? '已验收' : '确认验收' }}</text>
+          </button>
         </view>
+      </view>
 
-        <view class="summary-row" v-if="props.orderDetail?.work_kind_name === '工长'">
-          <text class="summary-label">工长上门次数：</text>
-          <text class="summary-value">{{ props.orderDetail?.visiting_service_num || 0 }}</text>
+      <!-- 施工进度（只展示第一个item的） -->
+      <view v-if="group.items[0]?.latest_construction_progress" class="construction-progress">
+        <view class="progress-header">
+          <view class="progress-title">
+            <uni-icons type="calendar" size="14" color="#6b7280" />
+            <text class="progress-title-text">最新施工进度</text>
+          </view>
+          <view class="view-more-btn" @click="handleViewMoreProgress(group.items[0])">
+            查看更多
+          </view>
         </view>
+        <view class="content-card">
+          <!-- 日期和时间 -->
+          <view class="date-time-row">
+            <text class="date-time-text">
+              {{
+                formatDateTimeRange(
+                  group.items[0].latest_construction_progress.start_time,
+                  group.items[0].latest_construction_progress.end_time,
+                )
+              }}
+            </text>
+          </view>
 
-        <view class="summary-row">
-          <text class="summary-label">平台服务费：</text>
-          <text class="summary-value"
-            >¥{{ formatCost(props.orderDetail?.total_service_fee || 0) }}</text
-          >
-        </view>
+          <!-- 地址 -->
+          <view v-if="group.items[0]?.latest_construction_progress?.location" class="location-row">
+            <text class="location-text">{{
+              group.items[0].latest_construction_progress.location
+              }}</text>
+          </view>
 
-        <view class="summary-row final-total">
-          <text class="summary-label">总计：</text>
-          <text class="summary-value final-price"> ¥{{ calculateFinalTotal() }} </text>
-        </view>
+          <!-- 工作描述 -->
+          <view v-if="group.items[0]?.latest_construction_progress?.description" class="description">
+            {{ group.items[0].latest_construction_progress.description }}
+          </view>
 
-        <view class="tag-view">
-          <uni-tag
-            :text="props.orderDetail?.is_paid ? '已支付' : '待支付'"
-            :type="props.orderDetail?.is_paid ? 'success' : 'warning'"
-          />
+          <!-- 照片网格 -->
+          <view v-if="group.items[0]?.latest_construction_progress?.photos?.length" class="photos-grid">
+            <view v-for="(photo, photoIndex) in getProgressPhotos(
+              group.items[0].latest_construction_progress.photos,
+            )" :key="photoIndex" class="photo-item" @click="
+              handlePreviewImage(group.items[0].latest_construction_progress.photos, photoIndex)
+              ">
+              <image :src="photo" mode="aspectFill" class="photo-image" />
+            </view>
+          </view>
         </view>
       </view>
     </view>
-  </custom-card>
+
+    <!-- 费用汇总底部 -->
+    <view class="cost-summary">
+      <view class="summary-divider"></view>
+
+      <!-- 费用明细 -->
+      <view class="summary-items">
+        <view class="summary-item">
+          <text class="summary-label">工价合计</text>
+          <text class="summary-value">¥{{ formatCost(orderDetail?.total_price || 0) }}</text>
+        </view>
+
+        <view class="summary-item" v-if="orderDetail?.order_type === 'gangmaster'">
+          <text class="summary-label">
+            工长工费<text v-if="orderDetail?.visiting_service_num" class="visit-count">
+              (上门{{ orderDetail.visiting_service_num }}次)</text>
+          </text>
+          <text class="summary-value">¥{{ formatCost(orderDetail?.gangmaster_cost || 0) }}</text>
+        </view>
+
+        <view class="summary-item">
+          <text class="summary-label">平台服务费</text>
+          <text class="summary-value">¥{{ formatCost(orderDetail?.total_service_fee || 0) }}</text>
+        </view>
+      </view>
+
+      <!-- 总计 -->
+      <view class="total-row">
+        <text class="total-label">总计</text>
+        <text class="total-amount">¥{{ formatCost(calculateFinalTotal()) }}</text>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="action-buttons">
+        <view class="pending-pay" :class="{ paid: orderDetail?.is_paid }">
+          <text>{{ orderDetail?.is_paid ? '已支付' : '待支付' }}</text>
+          <uni-icons v-if="orderDetail?.is_paid" type="checkmarkempty" size="14" color="#07c160" />
+        </view>
+      </view>
+    </view>
+  </card>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import customCard from '@/components/custom-card.vue'
-import { formatCost } from '@/utils'
+import card from '@/components/custom-card.vue'
+import section_header from '@/components/section-header.vue'
+import { formatCost, formatPhone, previewImage, formatDateTimeRange } from '@/utils'
 import { acceptOrderWorkPriceService } from '../service'
-
 const props = defineProps<{ orderDetail: any }>()
 const emit = defineEmits<{ refresh: [] }>()
 
-// 按工种分组工价项
+/**
+ * 按工匠分组工价
+ * - 同一个 assigned_craftsman.id → 一组
+ * - 没有分配工匠 → 统一放到「未分配」
+ */
 const groupedWorkPrices = computed(() => {
-  const groups: Record<string, { workKindName: string; items: any[] }> = {}
-  const workPrices = props.orderDetail?.parent_work_price_groups || []
+  const map: Record<
+    string | number,
+    {
+      craftsmanName: string
+      craftsman: any
+      items: any[]
+    }
+  > = {}
 
-  workPrices.forEach((item: any) => {
-    const workKindName = item.work_kind_name || '其他'
-    if (!groups[workKindName]) {
-      groups[workKindName] = {
-        workKindName,
+  const list = props.orderDetail?.parent_work_price_groups || []
+
+  list.forEach((item: any) => {
+    const craftsman = item.assigned_craftsman
+    const key = craftsman?.id ?? 'unassigned'
+
+    if (!map[key]) {
+      map[key] = {
+        craftsmanName: craftsman?.nickname || '未分配',
+        craftsman: craftsman || null,
         items: [],
       }
     }
-    groups[workKindName].items.push(item)
+
+    map[key].items.push(item)
   })
 
-  return Object.values(groups)
+  console.log(JSON.stringify(Object.values(map)), 'map')
+
+  return Object.values(map)
 })
 
 // 验收单个工价项
@@ -173,10 +220,6 @@ const handleAcceptOrderWorkPrice = async (work_price_item_id: number): Promise<a
   }
 }
 
-// 最低价规则
-const showMinimum = (item: any): boolean =>
-  item.is_set_minimum_price === '1' && item.minimum_price && parseFloat(item.quantity) <= 1
-
 // 计算最终总价（工价合计 + 工长费用 + 平台服务费）
 const calculateFinalTotal = (): number => {
   // 施工费用
@@ -193,292 +236,416 @@ const calculateFinalTotal = (): number => {
 const handleViewMaterials = (priceItem: any): void => {
   uni?.vibrateShort()
   const assignedCraftsmanId = priceItem.assigned_craftsman_id || ''
+  const orderType = props.orderDetail?.order_type || ''
+
   uni.navigateTo({
-    url: `/subpackages/work-price-materials/index?workPriceItemId=${priceItem.id}&orderId=${props.orderDetail?.id || ''}&assignedCraftsmanId=${assignedCraftsmanId}`,
+    url: `/subpackages/work-price-materials/index?workPriceItemId=${priceItem.id}&orderId=${props.orderDetail?.id || ''}&assignedCraftsmanId=${assignedCraftsmanId}&orderType=${orderType}`,
+  })
+}
+
+const handleViewMaterialsByOrderId = (): void => {
+  uni?.vibrateShort()
+  const { id, orderType } = props.orderDetail || {}
+  uni.navigateTo({
+    url: `/subpackages/work-price-materials/index?orderId=${id || ''}&orderType=${orderType}`,
+  })
+}
+
+// 获取施工进度图片（最多3张）
+const getProgressPhotos = (photos: string[]): string[] => {
+  if (!photos || !Array.isArray(photos)) return []
+  return photos.slice(0, 3)
+}
+
+// 预览图片
+const handlePreviewImage = (urls: string[], currentIndex: number | string): void => {
+  const index = typeof currentIndex === 'string' ? parseInt(currentIndex, 10) : currentIndex
+  previewImage(urls[index], urls)
+}
+
+// 查看更多施工进度
+const handleViewMoreProgress = (item: any): void => {
+  uni?.vibrateShort()
+
+  if (!item?.id || !item?.assigned_craftsman_id) {
+    uni.showToast({
+      title: '参数错误',
+      icon: 'none',
+    })
+    return
+  }
+
+  uni.navigateTo({
+    url: `/subpackages/construction-progress/index?workPriceItemId=${item.id}&craftsmanId=${item.assigned_craftsman_id}`,
   })
 }
 </script>
 
 <style lang="scss" scoped>
-.card-header {
+.header-materials-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 8rpx;
+  padding: 12rpx 24rpx;
+  border-radius: 12rpx;
+  background-color: #f0fdfa;
+  flex-shrink: 0;
 
-  .card-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #2c3e50;
+  .btn-text {
+    font-size: 24rpx;
+    font-weight: 500;
+    color: #00cec9;
   }
 }
 
-.cost-list {
+.group-item {
+  border: 1px solid #f5f5f5;
+  border-radius: 12rpx;
+  padding: 32rpx;
+  background-color: rgba(249, 250, 251, 0.5);
+
+  margin-bottom: 24rpx;
+}
+
+.row {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24rpx;
+}
 
-  .work-price-section {
-    padding: 12px;
-    background: #fafafa;
-    border-radius: 12px;
-    border: 1px solid #f0f0f0;
+.group-item-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24rpx;
+}
 
-    .work-kind-header {
-      padding: 8px 0;
-      margin-bottom: 8px;
-      border-bottom: 2px solid rgba(0, 206, 201, 0.2);
+.title {
+  flex: 1;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.4;
+  min-width: 0;
+}
 
-      .work-kind-name {
-        font-size: 16px;
-        font-weight: 600;
-        color: #00cec9;
-      }
-    }
+.unit-price {
+  font-size: 24rpx;
+  color: #4b5563;
+}
 
-    .cost-item-wrapper {
-      padding: 10px 0;
-      border-bottom: 1px solid #f0f0f0;
+.minimum-price-badge {
+  display: inline-block;
+  font-size: 24rpx;
+  color: #00cec9;
+  background-color: rgba(0, 206, 201, 0.05);
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  margin-top: 16rpx;
+}
 
-      &.no-border {
-        border-bottom: none;
-      }
-    }
+.price {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #00cec9;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 
-    .cost-item {
+.accept-btn {
+  padding: 12rpx 24rpx;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #fff;
+  background-color: #00cec9;
+  box-shadow: 0 2rpx 8rpx rgba(0, 206, 201, 0.2);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+
+  &.accepted {
+    background-color: transparent;
+    color: #07c160;
+    box-shadow: none;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4rpx;
+    font-size: 24rpx;
+    font-weight: 400;
+  }
+}
+
+.construction-progress {
+  margin-top: 24rpx;
+  margin-bottom: 24rpx;
+
+  .progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16rpx;
+
+    .progress-title {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 8rpx;
+      font-size: 24rpx;
+      color: #6b7280;
 
-      .cost-item-left {
-        flex: 1;
-        min-width: 0;
-
-        .cost-label {
-          font-size: 15px;
-          color: #495057;
-          display: block;
-          margin-bottom: 4px;
-          word-break: break-all;
-        }
-
-        .cost-meta {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          margin-top: 4px;
-
-          .cost-quantity {
-            font-size: 12px;
-            color: #999;
-          }
-
-          .cost-minimum {
-            font-size: 12px;
-            color: #ff6b6b;
-            font-weight: 500;
-          }
-        }
-      }
-
-      .cost-value {
-        font-size: 15px;
-        font-weight: 600;
-        color: #2c3e50;
-        margin-left: 12px;
-        flex-shrink: 0;
+      .progress-title-text {
+        font-size: 24rpx;
+        color: #6b7280;
       }
     }
 
-    .action-buttons-view {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-top: 12px;
+    .view-more-btn {
+      font-size: 24rpx;
+      color: #00cec9;
+    }
+  }
+
+  .content-card {
+    flex: 1;
+    background-color: #f9fafb;
+    border-radius: 16px;
+    padding: 16px;
+    min-width: 0;
+  }
+
+  .date-time-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #666;
+  }
+
+  .date-time-text {
+    font-size: 24rpx;
+    color: #666;
+    flex: 1;
+    word-break: break-all;
+    line-height: 1.5;
+  }
+
+  .location-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    font-size: 24rpx;
+    color: #666;
+  }
+
+  .location-text {
+    font-size: 14px;
+    color: #666;
+    flex: 1;
+    line-height: 1.5;
+  }
+
+  .description {
+    margin-bottom: 12px;
+    font-size: 15px;
+    color: #374151;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .photos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .photo-item {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: opacity 0.2s;
+
+    .photo-image {
       width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+}
 
-      .action-btn {
-        display: inline-flex !important;
+.group-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1px solid #f5f5f5;
+  margin-bottom: 24rpx;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 24rpx;
+    flex: 1;
+    min-width: 0;
+
+    .avatar-wrapper {
+      width: 80rpx;
+      height: 80rpx;
+      border-radius: 50%;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      flex-shrink: 0;
+      background-color: #f9fafb;
+
+      .avatar {
+        width: 100%;
+        height: 100%;
+      }
+
+      .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 8px;
-        border: none;
-        outline: none;
-        box-sizing: border-box;
-        font-size: 13px;
+        background-color: #f0fdfa;
+      }
+    }
+
+    .header-info {
+      flex: 1;
+      min-width: 0;
+
+      .craftsman-name {
+        font-size: 28rpx;
         font-weight: 600;
-        flex-shrink: 0;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-
-        &::after {
-          border: none;
-        }
-
-        &:active:not(:disabled) {
-          transform: scale(0.96);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-        }
-
-        &:disabled {
-          opacity: 1;
-        }
-
-        .action-btn-text {
-          font-size: 13px;
-          font-weight: 600;
-          letter-spacing: 0.3px;
-        }
+        color: #111827;
+        line-height: 1.4;
+        margin-bottom: 8rpx;
       }
 
-      .materials-btn {
-        background: linear-gradient(135deg, rgba(0, 206, 201, 0.1), rgba(0, 180, 216, 0.08));
-        border: 1px solid rgba(0, 206, 201, 0.25);
-        box-shadow: 0 2px 4px rgba(0, 206, 201, 0.08);
+      .phone-info {
+        display: flex;
+        align-items: center;
+        gap: 8rpx;
+        font-size: 24rpx;
+        color: #6b7280;
+        line-height: 1.4;
 
-        &:active {
-          background: linear-gradient(135deg, rgba(0, 206, 201, 0.15), rgba(0, 180, 216, 0.12));
-          box-shadow: 0 1px 2px rgba(0, 206, 201, 0.12);
-        }
-
-        .action-btn-text {
-          color: #00cec9;
-        }
-      }
-
-      .acceptance-btn {
-        background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.08));
-        border: 1px solid rgba(255, 152, 0, 0.25);
-        box-shadow: 0 2px 4px rgba(255, 152, 0, 0.08);
-
-        &:active:not(:disabled) {
-          background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 152, 0, 0.12));
-          box-shadow: 0 1px 2px rgba(255, 152, 0, 0.12);
-        }
-
-        &.accepted {
-          background: linear-gradient(135deg, rgba(7, 193, 96, 0.1), rgba(7, 193, 96, 0.08));
-          border: 1px solid rgba(7, 193, 96, 0.25);
-          box-shadow: 0 2px 4px rgba(7, 193, 96, 0.08);
-
-          &:active {
-            background: linear-gradient(135deg, rgba(7, 193, 96, 0.15), rgba(7, 193, 96, 0.12));
-            box-shadow: 0 1px 2px rgba(7, 193, 96, 0.12);
-          }
-        }
-
-        .action-btn-text {
-          &.pending {
-            color: #ff9800;
-          }
-
-          &.accepted {
-            color: #07c160;
-          }
+        .phone-number {
+          font-size: 24rpx;
+          color: #6b7280;
         }
       }
     }
   }
 
-  .work-price-summary {
-    margin-top: 12px;
-    padding: 12px;
-    background: #fff;
-    border: 1px solid rgba(0, 206, 201, 0.1);
-    border-radius: 8px;
+  .materials-btn {
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+    padding: 12rpx 24rpx;
+    border-radius: 12rpx;
+    background-color: #f0fdfa;
+    flex-shrink: 0;
+    margin-left: auto;
 
-    .summary-row {
+    .btn-text {
+      font-size: 24rpx;
+      font-weight: 500;
+      color: #00cec9;
+    }
+  }
+}
+
+.cost-summary {
+  margin-top: 48rpx;
+  padding-top: 48rpx;
+  border-top: 2px solid #e5e7eb;
+
+  .summary-divider {
+    display: none;
+  }
+
+  .summary-items {
+    display: flex;
+    flex-direction: column;
+    gap: 24rpx;
+    margin-bottom: 32rpx;
+
+    .summary-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 0;
-      font-size: 14px;
-
-      &:not(:last-child) {
-        border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
-      }
 
       .summary-label {
-        color: #646566;
-        font-weight: 500;
+        font-size: 24rpx;
+        color: #6b7280;
+        font-weight: 400;
+
+        .visit-count {
+          font-size: 24rpx;
+          color: #6b7280;
+          font-weight: 400;
+        }
       }
 
       .summary-value {
-        color: #323233;
+        font-size: 24rpx;
+        color: #111827;
         font-weight: 600;
-        font-size: 15px;
-
-        &.final-price {
-          font-size: 18px;
-          font-weight: 700;
-          color: #00cec9;
-        }
-      }
-
-      &.final-total {
-        margin-top: 4px;
-        padding-top: 10px;
-        border-top: 2px solid rgba(0, 206, 201, 0.2);
-        border-bottom: none;
-
-        .summary-label {
-          font-size: 15px;
-          font-weight: 600;
-          color: #323233;
-        }
       }
     }
+  }
 
-    .tag-view {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 12px;
-      padding: 12px 0;
-      border-top: 1px solid #f0f0f0;
-    }
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 24rpx;
+    border-top: 1px solid #e5e7eb;
+    margin-bottom: 32rpx;
 
-    .acceptance-btn {
-      width: 100%;
-      height: 48px;
-      background: #fff8f0;
-      color: #ff9800;
-      border: 1.5px solid #ff9800;
-      border-radius: 12px;
-      font-size: 15px;
+    .total-label {
+      font-size: 28rpx;
+      color: #111827;
       font-weight: 600;
-      display: flex;
+    }
+
+    .total-amount {
+      font-size: 48rpx;
+      color: #00cec9;
+      font-weight: 700;
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 32rpx;
+
+    .pending-pay {
+      padding: 8rpx 24rpx;
+      border-radius: 16rpx;
+      font-size: 24rpx;
+      font-weight: 600;
+      background-color: rgba(253, 203, 110, 0.125);
+      color: rgb(253, 203, 110);
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.1);
-      transition: all 0.3s ease;
-      outline: none;
-      padding: 0;
-      margin: 0;
-      box-sizing: border-box;
+      gap: 8rpx;
 
-      &::after {
-        border: none;
-      }
-
-      &.accepted {
-        background: rgba(7, 193, 96, 0.1);
+      &.paid {
+        background-color: rgba(7, 193, 96, 0.1);
         color: #07c160;
-        border-color: #07c160;
-        box-shadow: 0 2px 8px rgba(7, 193, 96, 0.1);
-      }
-
-      &:active:not(:disabled) {
-        background: #fff3e0;
-        transform: scale(0.98);
-        box-shadow: 0 1px 4px rgba(255, 152, 0, 0.15);
-      }
-
-      &:disabled {
-        opacity: 0.8;
+        box-shadow: none;
       }
     }
   }
