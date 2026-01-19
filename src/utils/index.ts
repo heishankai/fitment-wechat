@@ -177,3 +177,31 @@ export const formatTime = (time: string): string => {
   }
 }
 
+/**
+ * 格式化日期时间范围
+ * 如果开始时间和结束时间的日期相同，结束时间只显示时间部分
+ * @param startTime 开始时间字符串
+ * @param endTime 结束时间字符串（可选）
+ * @returns 格式化后的时间范围字符串
+ */
+export const formatDateTimeRange = (startTime: string, endTime?: string): string => {
+  if (!startTime) return ''
+  
+  if (!endTime) {
+    return startTime
+  }
+  
+  const start = dayjs(startTime)
+  const end = dayjs(endTime)
+  
+  // 判断日期是否相同
+  const isSameDate = start.format('YYYY-MM-DD') === end.format('YYYY-MM-DD')
+  
+  if (isSameDate) {
+    // 日期相同，结束时间只显示时间部分
+    return `${startTime} - ${end.format('HH:mm')}`
+  } else {
+    // 日期不同，都显示完整日期时间
+    return `${startTime} - ${endTime}`
+  }
+}

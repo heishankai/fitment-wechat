@@ -1,17 +1,15 @@
 <template>
   <view class="container">
-    <custom-navbar />
     <scroll-view class="scroll-view" scroll-y>
       <mine-header :userInfo="userInfo" />
-      <mine-title />
+      <mine-item-list />
     </scroll-view>
   </view>
 </template>
 
 <script setup lang="ts">
 import mineHeader from './components/mine-header.vue'
-import mineTitle from './components/mine-title.vue'
-import customNavbar from './components/custom-navbar.vue'
+import mineItemList from './components/mine-item-list.vue'
 
 const userInfo = ref({})
 

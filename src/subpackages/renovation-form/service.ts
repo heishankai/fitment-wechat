@@ -1,30 +1,4 @@
 import { request } from '@/utils/request'
-
-/**
- * 装修案例列表
- */
-
-export const getCaseListService = (params: {
-  pageIndex: number
-  pageSize: number
-}): Promise<any> => {
-  return request({
-    method: 'POST',
-    url: '/case-query/page',
-    data: params,
-  })
-}
-
-/**
- * 获取轮播图
- */
-export const getSwiperListService = (): Promise<any> => {
-  return request({
-    method: 'GET',
-    url: '/swiper-config',
-  })
-}
-
 /**
  * 登录
  */
@@ -75,27 +49,5 @@ export const getQuoteService = (params: {
     method: 'POST',
     url: '/get-price',
     data: params,
-  })
-}
-
-/**
- * 获取按钮标题
- * path :/independent-page-config/title
- * method:GET
- */
-export const getButtonTitleService = (): Promise<any> => {
-  return request({
-    method: 'GET',
-    url: '/independent-page-config/title',
-  })
-}
-
-/**
- * 获取活动列表
- */
-export const getActivityListService = (): Promise<any> => {
-  return request({
-    method: 'GET',
-    url: '/activity',
   })
 }

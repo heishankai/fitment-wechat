@@ -8,20 +8,22 @@
       class="scroll-view"
       @scroll="onScroll"
     >
-      <!-- 房源信息卡片 -->
-      <property-card :caseDetail="caseDetail" />
-      <view class="divider-view"></view>
+      <view class="content-wrapper">
+        <!-- 房源信息卡片 -->
+        <property-card :caseDetail="caseDetail" />
+        <view class="divider-view"></view>
 
-      <!-- 费用明细卡片 -->
-      <cost-card :caseDetail="caseDetail" />
-      <view class="divider-view"></view>
+        <!-- 费用明细卡片 -->
+        <cost-card :caseDetail="caseDetail" />
+        <view class="divider-view"></view>
 
-      <!-- 完工效果 -->
-      <completion-section :caseDetail="caseDetail" />
-      <view class="divider-view"></view>
+        <!-- 完工效果 -->
+        <completion-section :caseDetail="caseDetail" />
+        <view class="divider-view"></view>
 
-      <!-- 施工现场 -->
-      <construction-section :caseDetail="caseDetail" />
+        <!-- 施工现场 -->
+        <construction-section :caseDetail="caseDetail" />
+      </view>
     </scroll-view>
 
     <contact-service :scrollTop="scrollTop" />
@@ -82,11 +84,16 @@ page {
 .scroll-view {
   flex: 1;
   overflow: hidden;
-  padding: 16px;
+  box-sizing: border-box;
+  // margin: 12px;
+}
+
+.content-wrapper {
+  padding: 12px;
   box-sizing: border-box;
 }
 
 .divider-view {
-  height: 16px;
+  height: 12px;
 }
 </style>

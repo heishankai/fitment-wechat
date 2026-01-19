@@ -1,12 +1,7 @@
 <template>
   <view class="waterfall-container">
     <view class="waterfall-column" v-for="(column, index) in waterfallColumns" :key="index">
-      <view
-        class="case-item"
-        v-for="caseItem in column"
-        :key="caseItem.id"
-        @click="navigateToCaseDetail(caseItem.id)"
-      >
+      <view class="case-item" v-for="caseItem in column" :key="caseItem.id" @click="navigateToCaseDetail(caseItem.id)">
         <view class="case-image" :style="{ height: caseItem.imageHeight + 'px' }">
           <image :src="caseItem.drawingroom_image[0]" mode="aspectFill" class="image" />
           <view class="case-tag" :class="{ old: caseItem.remodel_type !== 1 }">
@@ -185,14 +180,16 @@ $primary-color: #00cec9;
   display: flex;
   gap: 8px;
   padding: 0 8px;
-  align-items: flex-start; /* 确保列从顶部开始对齐 */
+  align-items: flex-start;
+  /* 确保列从顶部开始对齐 */
 
   .waterfall-column {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    align-items: stretch; /* 确保案例卡片填满列宽 */
+    align-items: stretch;
+    /* 确保案例卡片填满列宽 */
 
     .case-item {
       background: #fff;
@@ -228,7 +225,7 @@ $primary-color: #00cec9;
           font-weight: 500;
 
           &.old {
-            background: rgba(108, 117, 125, 0.9);
+            background: #f275b3;
           }
         }
       }

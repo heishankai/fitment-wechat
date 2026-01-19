@@ -203,7 +203,7 @@ const handleSendOrder = async (): Promise<void> => {
 
     if (success && data) {
       wx.showToast({
-        title: '订单已发送，请前往我的订单查看',
+        title: '订单已发送，请前往我的工地查看',
         icon: 'none',
       })
       wx.navigateTo({

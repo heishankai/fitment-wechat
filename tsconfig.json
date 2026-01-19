@@ -2,6 +2,9 @@
   "compilerOptions": {
     "sourceMap": true,
     "baseUrl": ".",
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "bundler",
     "paths": {
       "@/*": [
         "./src/*"
