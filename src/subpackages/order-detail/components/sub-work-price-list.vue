@@ -7,100 +7,125 @@
       <view class="sub-cost-list">
         <view v-for="(group, groupIndex) in getGroupedByCraftsman(workGroup)"
           :key="`${workGroup.work_group_id}-${group.craftsman?.id || 'unassigned'}-${groupIndex}`" class="cost-item">
-        <!-- 工匠信息头部 -->
-        <view class="group-item-header" v-if="orderDetail?.order_type === 'gangmaster'">
-          <view class="header-left">
-            <view class="avatar-wrapper">
+          <!-- 工匠信息头部 -->
+          <view class="group-item-header" v-if="orderDetail?.order_type === 'gangmaster'">
+            <view class="header-left">
+              <view class="avatar-wrapper">
               <image v-if="group.craftsman?.avatar" class="avatar" :src="group.craftsman.avatar" mode="aspectFill" />
-              <view v-else class="avatar-placeholder">
-                <uni-icons type="person" size="20" color="#00cec9" />
+                <view v-else class="avatar-placeholder">
+                  <uni-icons type="person" size="20" color="#00cec9" />
+                </view>
               </view>
-            </view>
-            <view class="header-info">
-              <view class="craftsman-name">{{ group.craftsmanName }}</view>
-              <view class="phone-info">
-                <uni-icons type="phone" size="14" color="#6b7280" />
+              <view class="header-info">
+                <view class="craftsman-name">{{ group.craftsmanName }}</view>
+                <view class="phone-info">
+                  <uni-icons type="phone" size="14" color="#6b7280" />
                 <text class="phone-number">{{ formatPhone(group.craftsman?.phone) || '暂无' }}</text>
               </view>
             </view>
           </view>
           <view v-if="group.items[0]?.assigned_craftsman_id" class="materials-btn"
             @click="handleViewMaterials(group.items[0])">
-            <text class="btn-text">辅材清单</text>
-            <uni-icons type="right" size="14" color="#00cec9" />
+              <text class="btn-text">辅材清单</text>
+              <uni-icons type="right" size="14" color="#00cec9" />
+            </view>
           </view>
-        </view>
 
-        <!-- 工价项列表 -->
-        <view v-for="priceItem in group.items" :key="priceItem.id" class="group-item">
-          <view class="row">
-            <view class="title">{{ priceItem.work_title }}</view>
-            <view class="price">¥{{ formatCost(priceItem.settlement_amount) }}</view>
-          </view>
-          <view class="group-item-container">
-            <view>
-              <view class="unit-price">数量：{{ priceItem.quantity }}</view>
-              <view class="unit-price">单位：{{ priceItem.labour_cost_name }}</view>
-              <view v-if="showMinimumPrice(priceItem)" class="minimum-price-badge">
-                最低起步价：¥{{ formatCost(priceItem.minimum_price) }}
+          <!-- 工价项列表 -->
+          <view v-for="priceItem in group.items" :key="priceItem.id" class="group-item">
+            <view class="row">
+              <view class="title">{{ priceItem.work_title }}</view>
+              <view class="price">¥{{ formatCost(priceItem.settlement_amount) }}</view>
+            </view>
+            <view class="group-item-container">
+              <view>
+                <view class="unit-price">数量：{{ priceItem.quantity }}</view>
+                <view class="unit-price">单位：{{ priceItem.labour_cost_name }}</view>
+                <view v-if="showMinimumPrice(priceItem)" class="minimum-price-badge">
+                  最低起步价：¥{{ formatCost(priceItem.minimum_price) }}
+                </view>
+              </view>
+              <view class="action-buttons-group">
+                <button
+                  class="pay-btn"
+                  :class="{ paid: priceItem.is_paid }"
+                  :disabled="priceItem.is_paid"
+                  @click="handlePayOrder(priceItem.id)"
+                >
+                  <uni-icons
+                    v-if="priceItem.is_paid"
+                    type="checkmarkempty"
+                    size="12"
+                    color="#07c160"
+                  />
+                  <text>{{ priceItem.is_paid ? '已支付' : '立即支付' }}</text>
+                </button>
+                <button
+                  class="accept-btn"
+                  :class="{ accepted: priceItem.is_accepted }"
+                  :disabled="priceItem.is_accepted"
+                  @click="handleAcceptSubWorkPrice(priceItem.id)"
+                >
+                  <uni-icons
+                    v-if="priceItem.is_accepted"
+                    type="checkmarkempty"
+                    size="12"
+                    color="#07c160"
+                  />
+                  <text>{{ priceItem.is_accepted ? '已验收' : '确认验收' }}</text>
+                </button>
               </view>
             </view>
-            <button class="accept-btn" :class="{ accepted: priceItem.is_accepted }" :disabled="priceItem.is_accepted"
-              @click="handleAcceptSubWorkPrice(priceItem.id)">
-              <uni-icons v-if="priceItem.is_accepted" type="checkmarkempty" size="12" color="#07c160" />
-              <text>{{ priceItem.is_accepted ? '已验收' : '确认验收' }}</text>
-            </button>
           </view>
-        </view>
 
-        <!-- 施工进度（只展示第一个item的） -->
-        <view v-if="group.items[0]?.latest_construction_progress" class="construction-progress">
-          <view class="progress-header">
-            <view class="progress-title">
-              <uni-icons type="calendar" size="14" color="#6b7280" />
-              <text class="progress-title-text">最新施工进度</text>
+          <!-- 施工进度（只展示第一个item的） -->
+          <view v-if="group.items[0]?.latest_construction_progress" class="construction-progress">
+            <view class="progress-header">
+              <view class="progress-title">
+                <uni-icons type="calendar" size="14" color="#6b7280" />
+                <text class="progress-title-text">最新施工进度</text>
+              </view>
+              <view class="view-more-btn" @click="handleViewMoreProgress(group.items[0])">
+                查看更多
+              </view>
             </view>
-            <view class="view-more-btn" @click="handleViewMoreProgress(group.items[0])">
-              查看更多
-            </view>
-          </view>
-          <view class="content-card">
-            <!-- 日期和时间 -->
-            <view class="date-time-row">
-              <text class="date-time-text">
-                {{
-                  formatDateTimeRange(
-                    group.items[0].latest_construction_progress.start_time,
-                    group.items[0].latest_construction_progress.end_time,
-                  )
-                }}
-              </text>
-            </view>
+            <view class="content-card">
+              <!-- 日期和时间 -->
+              <view class="date-time-row">
+                <text class="date-time-text">
+                  {{
+                    formatDateTimeRange(
+                      group.items[0].latest_construction_progress.start_time,
+                      group.items[0].latest_construction_progress.end_time,
+                    )
+                  }}
+                </text>
+              </view>
 
-            <!-- 地址 -->
+              <!-- 地址 -->
             <view v-if="group.items[0]?.latest_construction_progress?.location" class="location-row">
-              <text class="location-text">{{
-                group.items[0].latest_construction_progress.location
+                <text class="location-text">{{
+                  group.items[0].latest_construction_progress.location
                 }}</text>
-            </view>
+              </view>
 
-            <!-- 工作描述 -->
+              <!-- 工作描述 -->
             <view v-if="group.items[0]?.latest_construction_progress?.description" class="description">
-              {{ group.items[0].latest_construction_progress.description }}
-            </view>
+                {{ group.items[0].latest_construction_progress.description }}
+              </view>
 
-            <!-- 照片网格 -->
+              <!-- 照片网格 -->
             <view v-if="group.items[0]?.latest_construction_progress?.photos?.length" class="photos-grid">
               <view v-for="(photo, photoIndex) in getProgressPhotos(
-                group.items[0].latest_construction_progress.photos,
+                      group.items[0].latest_construction_progress.photos,
               )" :key="photoIndex" class="photo-item" @click="
                 handlePreviewImage(group.items[0].latest_construction_progress.photos, photoIndex)
                 ">
-                <image :src="photo" mode="aspectFill" class="photo-image" />
+                  <image :src="photo" mode="aspectFill" class="photo-image" />
+                </view>
               </view>
             </view>
           </view>
-        </view>
         </view>
       </view>
 
@@ -140,7 +165,7 @@
 import section_header from '@/components/section-header.vue'
 import card from '@/components/custom-card.vue'
 import { formatCost, formatPhone, previewImage, formatDateTimeRange } from '@/utils'
-import { acceptOrderWorkPriceService } from '../service'
+import { acceptOrderWorkPriceService, payOrderWorkPriceService } from '../service'
 
 const props = defineProps<{ subWorkPrices?: any[]; orderDetail?: any }>()
 const emit = defineEmits<{ refresh: [] }>()
@@ -213,6 +238,57 @@ const handleAcceptSubWorkPrice = async (work_price_item_id: number): Promise<any
   }
 }
 
+// 支付单个工价项
+const handlePayOrder = async (work_price_item_id: number): Promise<void> => {
+  // 二次确认
+  const res = await new Promise<boolean>((resolve) => {
+    wx.showModal({
+      title: '平台服务费说明',
+      content: '平台服务费将同时进行支付，服务费为工价总额的10%',
+      confirmText: '确定',
+      cancelText: '取消',
+      confirmColor: '#00cec9',
+      success: (result) => resolve(result.confirm),
+      fail: () => resolve(false),
+    })
+  })
+  if (!res) return
+  const { success, data } = await payOrderWorkPriceService({
+    work_price_item_id,
+  })
+
+  console.log(success)
+  if (success) {
+    wx.requestPayment({
+      ...data.paySign,
+      async success() {
+        // wx.showToast({
+        //   title: '支付成功',
+        //   icon: 'none',
+        //   duration: 2000, // 默认是1500毫秒，可以设置为1000-10000毫秒
+        // })
+        wx.showLoading({
+          title: '更新状态',
+          mask: true, // 可选，是否显示透明蒙层，防止触摸穿透
+        })
+
+        setTimeout(async () => {
+          emit('refresh')
+          wx.hideLoading()
+        }, 1500)
+      },
+      fail(res) {
+        console.log('支付失败', res)
+      },
+    })
+  } else {
+    console.log('错误')
+    setTimeout(async () => {
+      emit('refresh')
+    }, 1000)
+  }
+}
+
 // 跳转到辅材清单页面
 const handleViewMaterials = (priceItem: any): void => {
   uni?.vibrateShort()
@@ -222,7 +298,6 @@ const handleViewMaterials = (priceItem: any): void => {
     url: `/subpackages/work-price-materials/index?workPriceItemId=${priceItem.id}&orderId=${props.orderDetail?.id || ''}&assignedCraftsmanId=${assignedCraftsmanId}&orderType=${orderType}`,
   })
 }
-
 
 // 获取施工进度图片（最多3张）
 const getProgressPhotos = (photos: string[]): string[] => {
@@ -389,7 +464,7 @@ const handleViewMoreProgress = (item: any): void => {
     .group-item-container {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       gap: 24rpx;
       margin-top: 16rpx;
 
@@ -406,6 +481,44 @@ const handleViewMoreProgress = (item: any): void => {
         padding: 8rpx 16rpx;
         border-radius: 8rpx;
         margin-top: 16rpx;
+      }
+
+      .action-buttons-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12rpx;
+        align-items: flex-end;
+      }
+
+      .pay-btn {
+        padding: 12rpx 24rpx;
+        border-radius: 12rpx;
+        font-size: 24rpx;
+        font-weight: 500;
+        color: #fff;
+        background-color: #ff6b6b;
+        box-shadow: 0 2rpx 8rpx rgba(255, 107, 107, 0.2);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8rpx;
+
+        &.paid {
+          background-color: transparent;
+          color: #07c160;
+          box-shadow: none;
+          padding: 0;
+          display: inline-flex;
+          align-items: center;
+          gap: 4rpx;
+          font-size: 24rpx;
+          font-weight: 400;
+        }
+
+        &::after {
+          border: none;
+        }
       }
 
       .accept-btn {
@@ -610,11 +723,11 @@ const handleViewMoreProgress = (item: any): void => {
     overflow: hidden;
     transition: opacity 0.2s;
 
-      .photo-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
+    .photo-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
   }
+}
 </style>

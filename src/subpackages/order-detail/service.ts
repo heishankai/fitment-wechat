@@ -45,13 +45,22 @@ export const acceptOrderWorkPriceService = (params: any): Promise<any> => {
     data: params,
   })
 }
+/**
+ * 支付工价
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export const payOrderWorkPriceService = (params: any): Promise<any> => {
+  return request({
+    method: 'POST',
+    url: `/order-payment-wxpay/create-payment`,
+    data: params,
+  })
+}
 
 /**
  * 验收辅材清单
  */
-export const acceptOrderMaterialsService = (params: {
-  materialsId: number
-}): Promise<any> => {
+export const acceptOrderMaterialsService = (params: { materialsId: number }): Promise<any> => {
   return request({
     method: 'POST',
     url: `/materials/accept`,
@@ -68,6 +77,30 @@ export const batchAcceptOrderMaterialsService = (params: {
   return request({
     method: 'POST',
     url: `/materials/batch-accept`,
+    data: params,
+  })
+}
+
+/**
+ * 支付辅材清单
+ * materials-payment-wxpay/create-payment-single
+ */
+export const payOrderMaterialsService = (params: { materialsId: number }): Promise<any> => {
+  return request({
+    method: 'POST',
+    url: `/materials-payment-wxpay/create-payment-single`,
+    data: params,
+  })
+}
+
+/**
+ * 批量支付辅材清单
+ * materials-payment-wxpay/create-payment-batch
+ */
+export const batchPayOrderMaterialsService = (params: { materialsIds: number[] }): Promise<any> => {
+  return request({
+    method: 'POST',
+    url: `/materials-payment-wxpay/create-payment-batch`,
     data: params,
   })
 }
@@ -129,7 +162,7 @@ export const getMaterialsByWorkPriceItemId = (workPriceItemId: number | string):
  */
 export const getMaterialsByWorkPriceItemIdAndCraftsman = (
   workPriceItemId: number | string,
-  assignedCraftsmanId: number | string
+  assignedCraftsmanId: number | string,
 ): Promise<any> => {
   return request({
     method: 'GET',

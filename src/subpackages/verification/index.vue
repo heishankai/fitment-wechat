@@ -453,6 +453,9 @@ page {
     font-size: 18px;
     font-weight: 600;
     box-shadow: 0 4rpx 15rpx rgba(255, 107, 107, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     // &:active {
     //   opacity: 0.9;

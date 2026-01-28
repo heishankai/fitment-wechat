@@ -47,11 +47,26 @@
               最低起步价：¥{{ formatCost(item?.minimum_price) }}
             </view>
           </view>
-          <button class="accept-btn" :class="{ accepted: item?.is_accepted }" :disabled="item?.is_accepted"
-            @click="handleAcceptOrderWorkPrice(item?.id)">
-            <uni-icons v-if="item?.is_accepted" type="checkmarkempty" size="12" color="#07c160" />
-            <text>{{ item?.is_accepted ? '已验收' : '确认验收' }}</text>
-          </button>
+          <view class="action-buttons-group">
+            <button
+              class="pay-btn"
+              :class="{ paid: item?.is_paid }"
+              :disabled="item?.is_paid"
+              @click="handlePayOrder(item?.id)"
+            >
+              <uni-icons v-if="item?.is_paid" type="checkmarkempty" size="12" color="#07c160" />
+              <text>{{ item?.is_paid ? '已支付' : '立即支付' }}</text>
+            </button>
+            <button
+              class="accept-btn"
+              :class="{ accepted: item?.is_accepted }"
+              :disabled="item?.is_accepted"
+              @click="handleAcceptOrderWorkPrice(item?.id)"
+            >
+              <uni-icons v-if="item?.is_accepted" type="checkmarkempty" size="12" color="#07c160" />
+              <text>{{ item?.is_accepted ? '已验收' : '确认验收' }}</text>
+            </button>
+          </view>
         </view>
       </view>
 
@@ -83,7 +98,7 @@
           <view v-if="group.items[0]?.latest_construction_progress?.location" class="location-row">
             <text class="location-text">{{
               group.items[0].latest_construction_progress.location
-              }}</text>
+            }}</text>
           </view>
 
           <!-- 工作描述 -->
@@ -94,9 +109,9 @@
           <!-- 照片网格 -->
           <view v-if="group.items[0]?.latest_construction_progress?.photos?.length" class="photos-grid">
             <view v-for="(photo, photoIndex) in getProgressPhotos(
-              group.items[0].latest_construction_progress.photos,
+                group.items[0].latest_construction_progress.photos,
             )" :key="photoIndex" class="photo-item" @click="
-              handlePreviewImage(group.items[0].latest_construction_progress.photos, photoIndex)
+                handlePreviewImage(group.items[0].latest_construction_progress.photos, photoIndex)
               ">
               <image :src="photo" mode="aspectFill" class="photo-image" />
             </view>
@@ -152,7 +167,7 @@ import { computed } from 'vue'
 import card from '@/components/custom-card.vue'
 import section_header from '@/components/section-header.vue'
 import { formatCost, formatPhone, previewImage, formatDateTimeRange } from '@/utils'
-import { acceptOrderWorkPriceService } from '../service'
+import { acceptOrderWorkPriceService, payOrderWorkPriceService } from '../service'
 const props = defineProps<{ orderDetail: any }>()
 const emit = defineEmits<{ refresh: [] }>()
 
@@ -216,6 +231,31 @@ const handleAcceptOrderWorkPrice = async (work_price_item_id: number): Promise<a
 
   if (success) {
     wx.showToast({ title: '验收成功', icon: 'none' })
+    emit('refresh')
+  }
+}
+
+// 支付单个工价项
+const handlePayOrder = async (work_price_item_id: number): Promise<void> => {
+  const { success, data, message } = await payOrderWorkPriceService({
+    work_price_item_id,
+  })
+
+  if (success) {
+    wx.requestPayment({
+      ...data.paySign,
+      async success() {
+        wx.showToast({ title: '支付成功', icon: 'none' })
+        await new Promise((resolve) => setTimeout(resolve, 500))
+        emit('refresh')
+      },
+      fail(res) {
+        console.log('支付失败', res)
+      },
+    })
+  } else {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    wx.showToast({ title: message, icon: 'none' })
     emit('refresh')
   }
 }
@@ -317,7 +357,7 @@ const handleViewMoreProgress = (item: any): void => {
 .group-item-container {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 24rpx;
 }
 
@@ -351,6 +391,40 @@ const handleViewMoreProgress = (item: any): void => {
   color: #00cec9;
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+.action-buttons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  align-items: flex-end;
+}
+
+.pay-btn {
+  padding: 12rpx 24rpx;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #fff;
+  background-color: #ff6b6b;
+  box-shadow: 0 2rpx 8rpx rgba(255, 107, 107, 0.2);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+
+  &.paid {
+    background-color: transparent;
+    color: #07c160;
+    box-shadow: none;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4rpx;
+    font-size: 24rpx;
+    font-weight: 400;
+  }
 }
 
 .accept-btn {

@@ -40,17 +40,30 @@
                 <text class="material-total-price"
                   >¥{{ formatCost(commodity.settlement_amount) }}</text
                 >
-                <view v-if="commodity.is_accepted" class="accepted-status">
-                  <uni-icons type="checkmarkempty" size="12" color="#07c160" />
-                  <text class="accepted-text">已验收</text>
+                <view class="action-buttons">
+                  <view v-if="commodity.is_paid" class="paid-status">
+                    <uni-icons type="checkmarkempty" size="12" color="#ff9800" />
+                    <text class="paid-text">已支付</text>
+                  </view>
+                  <button
+                    v-else
+                    class="pay-btn"
+                    @click.stop="handlePayMaterial(Number(commodity.id))"
+                  >
+                    立即支付
+                  </button>
+                  <view v-if="commodity.is_accepted" class="accepted-status">
+                    <uni-icons type="checkmarkempty" size="12" color="#07c160" />
+                    <text class="accepted-text">已验收</text>
+                  </view>
+                  <button
+                    v-else
+                    class="accept-btn"
+                    @click.stop="handleAcceptMaterial(Number(commodity.id))"
+                  >
+                    确认验收
+                  </button>
                 </view>
-                <button
-                  v-else
-                  class="accept-btn"
-                  @click.stop="handleAcceptMaterial(Number(commodity.id))"
-                >
-                  确认验收
-                </button>
               </view>
             </view>
           </view>
@@ -72,9 +85,14 @@
           <text class="total-label">总价</text>
           <text class="total-price">¥{{ formatCost(materialsList?.total_price || 0) }}</text>
         </view>
-        <button v-if="hasUnacceptedMaterials" class="batch-accept-btn" @click="handleBatchAccept">
-          全部确认验收
-        </button>
+        <view class="action-buttons">
+          <button v-if="hasUnpaidMaterials" class="batch-pay-btn" @click="handleBatchPay">
+            全部支付
+          </button>
+          <button v-if="hasUnacceptedMaterials" class="batch-accept-btn" @click="handleBatchAccept">
+            全部确认验收
+          </button>
+        </view>
       </view>
     </view>
   </view>
@@ -89,6 +107,8 @@ import {
   getMaterialsByOrderId,
   acceptOrderMaterialsService,
   batchAcceptOrderMaterialsService,
+  payOrderMaterialsService,
+  batchPayOrderMaterialsService,
 } from '../order-detail/service'
 import { formatCost, previewImage } from '@/utils'
 
@@ -112,6 +132,12 @@ const totalQuantity = computed(() => {
 const hasUnacceptedMaterials = computed(() => {
   if (!materialsList.value?.commodity_list) return false
   return materialsList.value.commodity_list.some((commodity: any) => !commodity.is_accepted)
+})
+
+// 检查是否有未支付的辅材
+const hasUnpaidMaterials = computed(() => {
+  if (!materialsList.value?.commodity_list) return false
+  return materialsList.value.commodity_list.some((commodity: any) => !commodity.is_paid)
 })
 
 // 计算单价
@@ -181,6 +207,108 @@ const handleAcceptMaterial = async (materialsId: number): Promise<any> => {
     wx.showToast({ title: '验收成功', icon: 'none' })
     await loadMaterials()
   }
+}
+
+// 支付单个辅材商品
+const handlePayMaterial = async (materialsId: number): Promise<void> => {
+  uni?.vibrateShort()
+
+  const { success, data, message } = await payOrderMaterialsService({
+    materialsId,
+  })
+
+  if (success) {
+    wx.requestPayment({
+      ...data.paySign,
+      async success() {
+        wx.showToast({ title: '支付成功', icon: 'none' })
+        // 延时500ms后刷新数据
+        await new Promise((resolve) => setTimeout(resolve, 500))
+        await loadMaterials()
+      },
+      fail(res) {
+        console.log('支付失败', res)
+      },
+    })
+  } else {
+    wx.showToast({ title: message, icon: 'none' })
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    await loadMaterials()
+  }
+}
+
+// 全部支付辅材
+const handleBatchPay = async (): Promise<void> => {
+  uni?.vibrateShort()
+
+  if (!materialsList.value?.commodity_list) {
+    wx.showToast({ title: '辅材信息错误', icon: 'none' })
+    return
+  }
+
+  const unpaidMaterialsIds = materialsList.value.commodity_list
+    .filter((commodity: any) => !commodity.is_paid)
+    .map((commodity: any) => Number(commodity.id))
+
+  if (unpaidMaterialsIds.length === 0) {
+    wx.showToast({ title: '没有未支付的辅材', icon: 'none' })
+    return
+  }
+
+  const res = await new Promise<boolean>((resolve) => {
+    wx.showModal({
+      title: '确认全部支付',
+      content: `确定要支付 ${unpaidMaterialsIds.length} 项辅材吗？`,
+      confirmText: '确定',
+      cancelText: '取消',
+      confirmColor: '#ff9800',
+      success: (result) => resolve(result.confirm),
+      fail: () => resolve(false),
+    })
+  })
+
+  if (!res) return
+
+  wx.showLoading({ title: '支付中...', mask: true })
+  console.log(unpaidMaterialsIds)
+
+  try {
+    const { success, message, data } = await batchPayOrderMaterialsService({
+      materialsIds: unpaidMaterialsIds,
+    })
+
+    wx.hideLoading()
+
+    if (success) {
+      wx.requestPayment({
+        ...data.paySign,
+        async success() {
+          wx.showToast({ title: '支付成功', icon: 'none' })
+          // 延时500ms后刷新数据
+          await new Promise((resolve) => setTimeout(resolve, 500))
+          await loadMaterials()
+        },
+        fail(res) {
+          console.log('支付失败', res)
+        },
+      })
+    } else {
+      wx.showToast({
+        title: message,
+        icon: 'none',
+      })
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      await loadMaterials()
+    }
+  } catch (error: any) {
+    console.error('批量支付失败:', error)
+    wx.hideLoading()
+    wx.showToast({
+      title: '支付失败，请重试',
+      icon: 'none',
+    })
+  }
+  wx.hideLoading()
 }
 
 // 一键验收所有辅材
@@ -357,6 +485,12 @@ page {
   margin-top: auto;
 }
 
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .material-total-price {
   font-size: 18px;
   font-weight: 600;
@@ -372,6 +506,37 @@ page {
 .accepted-text {
   font-size: 12px;
   color: #07c160;
+}
+
+.paid-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.paid-text {
+  font-size: 12px;
+  color: #ff9800;
+}
+
+.pay-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #fff;
+  background-color: #ff9800;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    border: none;
+  }
+
+  &:active {
+    opacity: 0.9;
+  }
 }
 
 .accept-btn {
@@ -441,8 +606,37 @@ page {
   color: #00cec9;
 }
 
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.batch-pay-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    border: none;
+  }
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
 .batch-accept-btn {
-  width: 100%;
+  flex: 1;
   padding: 10px;
   border-radius: 12px;
   font-size: 16px;
