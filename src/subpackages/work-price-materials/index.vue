@@ -232,7 +232,6 @@ const handlePayMaterial = async (materialsId: number): Promise<void> => {
     })
   } else {
     wx.showToast({ title: message, icon: 'none' })
-    await new Promise((resolve) => setTimeout(resolve, 500))
     await loadMaterials()
   }
 }
@@ -297,7 +296,6 @@ const handleBatchPay = async (): Promise<void> => {
         title: message,
         icon: 'none',
       })
-      await new Promise((resolve) => setTimeout(resolve, 500))
       await loadMaterials()
     }
   } catch (error: any) {

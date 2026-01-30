@@ -254,7 +254,6 @@ const handlePayOrder = async (work_price_item_id: number): Promise<void> => {
       },
     })
   } else {
-    await new Promise((resolve) => setTimeout(resolve, 500))
     wx.showToast({ title: message, icon: 'none' })
     emit('refresh')
   }

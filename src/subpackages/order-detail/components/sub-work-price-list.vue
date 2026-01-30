@@ -283,9 +283,7 @@ const handlePayOrder = async (work_price_item_id: number): Promise<void> => {
     })
   } else {
     console.log('错误')
-    setTimeout(async () => {
-      emit('refresh')
-    }, 1000)
+    emit('refresh')
   }
 }
 
