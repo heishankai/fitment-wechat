@@ -1,35 +1,8 @@
 <script setup lang="ts">
 import { onLaunch, onShow, onHide, onLoad, onUnload, onReady } from '@dcloudio/uni-app'
-import dayjs from 'dayjs'
-
-// 存储键名
-const STORAGE_KEY = 'welcome_page_shown_date'
-
-// 获取今天的日期字符串（YYYY-MM-DD格式）
-const getTodayDateString = (): string => {
-  return dayjs().format('YYYY-MM-DD')
-}
-
-// 检查今天是否已经展示过欢迎页 和 活动页
-const hasShownWelcomeToday = (): boolean => {
-  try {
-    const lastShownDate = uni.getStorageSync(STORAGE_KEY)
-    const todayDate = getTodayDateString()
-    return lastShownDate === todayDate
-  } catch {
-    return false
-  }
-}
 
 onLaunch(() => {
   console.log('监听小程序初始化，全局只触发一次')
-
-  // 检查今天是否已经展示过欢迎页，如果展示过则直接跳转到主页面
-  if (hasShownWelcomeToday()) {
-    uni.reLaunch({
-      url: '/pages/house/index',
-    })
-  }
 
   // #ifdef MP-WEIXIN
   // 检查小程序更新

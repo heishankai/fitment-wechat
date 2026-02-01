@@ -34,8 +34,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import dayjs from 'dayjs'
 import { getActivityListService } from '../service'
 
 interface ActivityItem {
@@ -53,9 +51,6 @@ const popupRef = ref<any>(null)
 const current = ref<number>(0)
 const activity_list = ref<ActivityItem[]>([])
 
-// 存储键名
-const STORAGE_KEY = 'activity_popup_last_show_date'
-
 const onChange = (e: { detail: { current: number } }): void => {
   current.value = e.detail.current
 }
@@ -64,45 +59,11 @@ const close = (): void => {
   popupRef.value?.close()
 }
 
-/**
- * 检查今天是否已经显示过弹窗
- * @returns true 表示今天已显示过，false 表示今天未显示过
- */
-const hasShownToday = (): boolean => {
-  try {
-    const lastShowDate = uni.getStorageSync(STORAGE_KEY)
-    const today = dayjs().format('YYYY-MM-DD')
-    return lastShowDate === today
-  } catch (error) {
-    console.error('检查弹窗显示记录失败:', error)
-    return false
-  }
-}
-
-/**
- * 记录今天已显示弹窗
- */
-const markAsShownToday = (): void => {
-  try {
-    const today = dayjs().format('YYYY-MM-DD')
-    uni.setStorageSync(STORAGE_KEY, today)
-  } catch (error) {
-    console.error('保存弹窗显示记录失败:', error)
-  }
-}
-
 const loadActivityList = async (): Promise<void> => {
-  // 检查今天是否已经显示过
-  if (hasShownToday()) {
-    return
-  }
-
   const { success, data } = await getActivityListService()
   if (success && data) {
     activity_list.value = data
     popupRef.value?.open()
-    // 标记今天已显示
-    markAsShownToday()
   }
 }
 
@@ -112,6 +73,11 @@ const handleAction = (item: ActivityItem): void => {
     wx.navigateTo({ url: item?.linkUrl })
   }
 }
+
+// 暴露方法给父组件调用
+defineExpose({
+  showPopup: loadActivityList,
+})
 
 onMounted(() => {
   loadActivityList()

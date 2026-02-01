@@ -21,11 +21,12 @@
     <contact-service :scrollTop="scrollTop" />
 
     <!-- 首页弹窗 -->
-    <activity-popup />
+    <activity-popup ref="activityPopupRef" />
   </view>
 </template>
 
 <script setup lang="ts">
+import { onLoad } from '@dcloudio/uni-app'
 import BaseSwiper from '@/components/base-swiper.vue'
 import caseList from './components/case-list.vue'
 import contactService from '@/components/contact-service.vue'
@@ -36,6 +37,7 @@ import { getButtonTitleService, getSwiperListService } from './service'
 // 获取组件的引用
 const swiperHeaderRef = ref()
 const caseListRef = ref()
+const activityPopupRef = ref()
 const scrollTop = ref<number>(0)
 const swiper_image_list = ref<string[]>([])
 
@@ -74,6 +76,11 @@ const initVerificationBtnTitle = async (): Promise<void> => {
 onLoad(() => {
   initVerificationBtnTitle()
   loadSwiperList()
+})
+
+onLoad(() => {
+  // 每次进入首页时显示活动弹窗
+  activityPopupRef.value?.showPopup()
 })
 </script>
 

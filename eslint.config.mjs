@@ -42,6 +42,8 @@ export default [
         onError: true,
         computed: true,
         toRefs: true,
+        reactive: true,
+        onMounted: true,
         // 全局自动导入
       },
     },

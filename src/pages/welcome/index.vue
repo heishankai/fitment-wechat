@@ -26,14 +26,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
-import dayjs from 'dayjs'
 import { onLoad } from '@dcloudio/uni-app'
 import { getWelcomeInfoService } from './service'
 import { useCountdown } from '@/hooks/useCountdown'
-
-/** 本地存储 key */
-const STORAGE_KEY = 'welcome_page_shown_date'
 
 /** 欢迎页配置 */
 const welcomeInfo = reactive({
@@ -45,19 +40,8 @@ const welcomeInfo = reactive({
   copyright: '',
 })
 
-/** 获取今天日期 */
-const getTodayDateString = (): string => {
-  return dayjs().format('YYYY-MM-DD')
-}
-
 /** 跳转首页 */
 const navigateToHome = (): void => {
-  try {
-    uni.setStorageSync(STORAGE_KEY, getTodayDateString())
-  } catch (e) {
-    console.error('保存欢迎页展示记录失败', e)
-  }
-
   uni.switchTab({
     url: '/pages/house/index',
   })
@@ -83,14 +67,7 @@ const getWelcomeInfo = async (): Promise<void> => {
   try {
     const { data } = await getWelcomeInfoService()
     if (data) {
-      Object.assign(welcomeInfo, {
-        logo: data.logo || '',
-        background_image: data.background_image || '',
-        title: data.title || '',
-        subtitle: data.subtitle || '',
-        count_down: data.count_down || 5,
-        copyright: data.copyright || '',
-      })
+      Object.assign(welcomeInfo, { ...data })
     }
   } catch (error) {
     console.error('获取欢迎页配置失败', error)
