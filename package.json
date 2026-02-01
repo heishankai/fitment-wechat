@@ -2,8 +2,8 @@
   "name": "uni-preset-vue",
   "version": "0.0.0",
   "engines": {
-    "node": "20.19.5",
-    "pnpm": "8.15.1"
+    "node": "22.21.1",
+    "pnpm": "10.24.0"
   },
   "scripts": {
     "dev:custom": "uni -p",
