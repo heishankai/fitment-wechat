@@ -3,7 +3,6 @@ import { onLaunch, onShow, onHide, onLoad, onUnload, onReady } from '@dcloudio/u
 
 onLaunch(() => {
   console.log('监听小程序初始化，全局只触发一次')
-
   // #ifdef MP-WEIXIN
   // 检查小程序更新
   checkUpdate()
