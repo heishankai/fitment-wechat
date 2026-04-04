@@ -9,10 +9,10 @@ onLaunch(() => {
   // #endif
 })
 
-// #ifdef MP-WEIXIN
 /**
  * 检查小程序更新
  */
+// #ifdef MP-WEIXIN
 const checkUpdate = (): void => {
   // 判断微信版本是否支持更新管理器
   if (wx.canIUse('getUpdateManager')) {

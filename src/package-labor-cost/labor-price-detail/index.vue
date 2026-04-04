@@ -1,0 +1,584 @@
+<template>
+  <view class="container">
+    <!-- 滚动容器 -->
+    <scroll-view class="scroll-view" scroll-y :scroll-top="scrollTop">
+      <view class="header-wrap">
+        <swiper class="swiper" :indicator-dots="true" :autoplay="true" :circular="true" :duration="500"
+          :show-menu-by-longpress="false" :interval="3000">
+          <swiper-item v-for="(image, index) in orderDetail?.display_images || [DEFAULT_IMAGE]" :key="index">
+            <image class="header-img" :src="image || DEFAULT_IMAGE" mode="aspectFill" />
+          </swiper-item>
+        </swiper>
+        <!-- <image class="header-img" :src="item?.display_images[0] || DEFAULT_IMAGE" mode="aspectFill" /> -->
+        <view class="header-overlay" />
+
+        <!-- 底部标题区域（随图滚动） -->
+        <view v-if="orderDetail" class="header-bottom">
+          <view class="trade-badge">
+            <text class="trade-text">{{ orderDetail.work_kind?.title }}</text>
+            <view class="badge-dot" />
+            <text class="trade-text">标准工艺</text>
+          </view>
+          <text class="header-title">{{ orderDetail.work_title }}</text>
+          <text class="header-desc">{{ orderDetail.description || orderDetail.serviceScope }}</text>
+        </view>
+      </view>
+
+      <!-- 内容区 -->
+      <view v-if="orderDetail" class="content-inner">
+        <!-- 价格说明条（仅展示，无具体金额） -->
+        <view class="price-section">
+          <view class="price-left">
+            <text class="price-label">标准工艺参考</text>
+          </view>
+          <view class="price-badge">
+            <uni-icons custom-prefix="iconfont" type="icon-anquanbaozhang" size="12" color="#2D635E" />
+            <text>公开透明 · 沟通有据</text>
+          </view>
+        </view>
+
+        <!-- 计价说明 -->
+        <section class="detail-section">
+          <view class="section-title">
+            <view class="title-bar" />
+            <text class="title-text">计价说明</text>
+          </view>
+          <view class="pricing-note">{{ orderDetail.pricing_description }}</view>
+        </section>
+
+        <!-- 服务范围 -->
+        <section class="detail-section">
+          <view class="section-title">
+            <view class="title-bar" />
+            <text class="title-text">服务范围</text>
+          </view>
+          <text class="service-scope">{{ orderDetail.service_scope }}</text>
+        </section>
+
+        <!-- 验收标准（图片在上、文字在下，无点击放大） -->
+        <section v-if="orderDetail.service_details?.length" class="detail-section standards-section">
+          <view class="section-title">
+            <view class="title-bar" />
+            <text class="title-text">验收标准</text>
+          </view>
+          <view class="standards-list">
+            <view v-for="(std, idx) in orderDetail.service_details" :key="idx" class="standard-block">
+              <view v-if="std.service_image?.length" class="standard-image-wrap">
+                <image class="standard-image" :src="std.service_image[0]" mode="aspectFill"
+                  :show-menu-by-longpress="false" @tap.stop />
+              </view>
+              <text class="standard-text">{{ std.service_desc }}</text>
+            </view>
+          </view>
+        </section>
+
+        <!-- 平台说明 -->
+        <!-- <section class="warranty-section">
+          <uni-icons custom-prefix="iconfont" type="icon-anquanbaozhang" size="24" color="#2D635E" />
+          <view class="warranty-content">
+            <text class="warranty-title">平台说明</text>
+            <text class="warranty-desc">
+              本手册供查阅工艺与计价说明，实际费用与施工约定以书面合同及勘测报价为准。
+            </text>
+          </view>
+        </section> -->
+
+        <view class="bottom-spacer" />
+      </view>
+    </scroll-view>
+
+    <!-- 固定顶部导航栏（sticky）-->
+    <view class="sticky-header">
+      <view class="nav-back" @tap="goBack" :style="{ top: `${navBackTop}px` }">
+        <uni-icons type="left" size="22" color="#1e2222" />
+      </view>
+    </view>
+
+    <!-- 底部固定操作栏 -->
+    <view class="footer-bar">
+      <view class="footer-left">
+        <text class="footer-label">温馨说明</text>
+        <text class="footer-value">签约前以勘测报价为准</text>
+      </view>
+      <button class="footer-btn" open-type="getPhoneNumber" @getphonenumber="handleGetPhoneNumber">
+        <text>了解此服务</text>
+        <uni-icons type="arrow-right" size="16" color="#fff" />
+      </button>
+    </view>
+
+    <!-- 成功弹窗（对齐 fitment-mini-program renovation-form） -->
+    <uni-popup ref="successPopupRef" type="center" :mask-click="false">
+      <view class="success-card">
+        <view class="success-icon-wrap">
+          <uni-icons type="checkmarkempty" size="48" color="#2D635E" />
+        </view>
+        <text class="success-title">报价已提交</text>
+        <text class="success-desc">工作人员将尽快与您联系&#10;请保持电话畅通</text>
+      </view>
+    </uni-popup>
+  </view>
+</template>
+
+<script setup lang="ts">
+import { getWorkTypeDetailService, getUserPhoneNumberService } from './service'
+
+
+// 默认图片常量
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800&q=80'
+
+// 响应式数据
+const orderDetail = ref<any>({})
+const scrollTop = ref(0)
+const successPopupRef = ref<any>(null)
+
+// 精准计算返回按钮垂直位置（仅微信小程序）
+const navBackTop = computed(() => {
+  try {
+    const sys = uni.getSystemInfoSync()
+    const menuButton = wx.getMenuButtonBoundingClientRect()
+    const capsuleCenterY = menuButton.top + menuButton.height / 2
+    const containerSizePx = (72 * sys.windowWidth) / 750 // 72rpx 转 px
+    return Math.max(capsuleCenterY - containerSizePx / 2, 10)
+  } catch {
+    console.warn('Failed to get menu button rect, using fallback')
+    return (48 * uni.getSystemInfoSync().windowWidth) / 750
+  }
+})
+
+// 返回上一页
+const goBack = (): void => {
+  uni.navigateBack()
+}
+
+// 了解此服务
+const handleGetPhoneNumber = async (e: any): Promise<void> => {
+  const { code, errMsg } = e?.detail ?? {}
+
+  if (errMsg !== 'getPhoneNumber:ok') {
+    uni.showToast({ title: '需要手机号授权才能继续', icon: 'none' })
+    return
+  }
+  const { success } = await getUserPhoneNumberService({ code })
+  if (!success) {
+    uni.showToast({ title: '提交失败，请稍后重试', icon: 'none' })
+    return
+  }
+  successPopupRef.value?.open('center')
+  setTimeout(() => {
+    successPopupRef.value?.close()
+  }, 2000)
+}
+
+// 页面加载
+onLoad(async (options) => {
+  if (options?.id) {
+    const { success, data } = await getWorkTypeDetailService(options?.id)
+
+    if (success) {
+      const { service_details, ...rest } = data
+      console.log(service_details.slice(0, -1), 'service_details?.pop()');
+
+      orderDetail.value = { ...rest, service_details: service_details?.slice(0, -1) }
+    }
+  }
+})
+</script>
+
+<style lang="scss" scoped>
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.scroll-view {
+  flex: 1;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* === 可滚动的 Header === */
+.header-wrap {
+  position: relative;
+  width: 100%;
+  height: 600rpx;
+  flex-shrink: 0;
+
+  .swiper {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+
+  .header-img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .header-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top,
+        rgba(0, 0, 0, 0.8),
+        rgba(0, 0, 0, 0.2),
+        transparent);
+  }
+
+  .header-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 40rpx 40rpx 64rpx;
+    z-index: 2;
+
+    .trade-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12rpx;
+      padding: 8rpx 16rpx;
+      border-radius: 12rpx;
+      background: #2d635e;
+      margin-bottom: 24rpx;
+
+      .trade-text {
+        font-size: 22rpx;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .badge-dot {
+        width: 4rpx;
+        height: 20rpx;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 4rpx;
+      }
+    }
+
+    .header-title {
+      display: block;
+      font-size: 48rpx;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2rpx;
+      margin-bottom: 16rpx;
+    }
+
+    .header-desc {
+      display: block;
+      font-size: 28rpx;
+      color: rgba(255, 255, 255, 0.8);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.content-inner {
+  position: relative;
+  z-index: 2;
+  margin-top: -48rpx;
+  border-radius: 48rpx 48rpx 0 0;
+  overflow: hidden;
+  background: #fff;
+  padding: 64rpx 40rpx 200rpx;
+
+  .price-section {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-bottom: 48rpx;
+    margin-bottom: 48rpx;
+    border-bottom: 2rpx solid #f0f0f0;
+
+    .price-left {
+      flex: 1;
+
+      .price-label {
+        display: block;
+        font-size: 24rpx;
+        color: #888;
+        font-weight: 500;
+        margin-bottom: 8rpx;
+      }
+
+      .price-row {
+        display: flex;
+        align-items: baseline;
+        gap: 8rpx;
+
+        .price-symbol {
+          font-size: 32rpx;
+          font-weight: 700;
+          color: #2d635e;
+        }
+
+        .price-num {
+          font-size: 72rpx;
+          font-weight: 700;
+          font-family: ui-monospace, monospace;
+          color: #2d635e;
+          letter-spacing: -2rpx;
+          line-height: 1;
+        }
+
+        .price-unit {
+          font-size: 28rpx;
+          color: #666;
+          margin-left: 8rpx;
+        }
+      }
+    }
+
+    .price-badge {
+      display: flex;
+      align-items: center;
+      gap: 8rpx;
+      padding: 12rpx 20rpx;
+      background: rgba(45, 99, 94, 0.05);
+      border: 2rpx solid rgba(45, 99, 94, 0.1);
+      border-radius: 16rpx;
+      font-size: 22rpx;
+      color: #2d635e;
+    }
+  }
+
+  .detail-section {
+    margin-bottom: 80rpx;
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 20rpx;
+      margin-bottom: 24rpx;
+
+      .title-bar {
+        width: 8rpx;
+        height: 40rpx;
+        background: #2d635e;
+        border-radius: 8rpx;
+      }
+
+      .title-text {
+        font-size: 34rpx;
+        font-weight: 700;
+        color: #111;
+      }
+    }
+
+    .pricing-note {
+      padding: 32rpx;
+      background: #f9fafb;
+      border-radius: 24rpx;
+      font-size: 28rpx;
+      color: #555;
+      line-height: 1.6;
+      border: 2rpx solid #f0f0f0;
+    }
+
+    .service-scope {
+      font-size: 28rpx;
+      color: #555;
+      line-height: 1.8;
+      text-align: justify;
+    }
+
+    .standards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 80rpx;
+
+      .standard-block {
+        display: block;
+
+        .standard-image-wrap {
+          width: 100%;
+          height: 560rpx;
+          border-radius: 32rpx;
+          overflow: hidden;
+          background: #f2f2f2;
+          margin-bottom: 40rpx;
+        }
+
+        .standard-image {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        .standard-text {
+          display: block;
+          font-size: 30rpx;
+          color: #222;
+          line-height: 1.75;
+          text-align: justify;
+          letter-spacing: 0.5rpx;
+          padding: 0 4rpx;
+        }
+      }
+    }
+  }
+
+  .warranty-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 24rpx;
+    padding: 40rpx;
+    background: linear-gradient(135deg,
+        rgba(45, 99, 94, 0.05),
+        rgba(45, 99, 94, 0.1));
+    border-radius: 32rpx;
+    border: 2rpx solid rgba(45, 99, 94, 0.1);
+
+    uni-icons {
+      flex-shrink: 0;
+    }
+
+    .warranty-content {
+      flex: 1;
+
+      .warranty-title {
+        display: block;
+        font-size: 30rpx;
+        font-weight: 700;
+        color: #2d635e;
+        margin-bottom: 12rpx;
+      }
+
+      .warranty-desc {
+        font-size: 24rpx;
+        color: #666;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  .bottom-spacer {
+    height: 80rpx;
+  }
+}
+
+/* === Sticky 顶部导航栏 === */
+.sticky-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  pointer-events: none;
+
+  .nav-back {
+    position: absolute;
+    left: 32rpx;
+    z-index: 1000;
+    width: 72rpx;
+    height: 72rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    pointer-events: auto;
+    background: $uni-bg-color;
+  }
+}
+
+/* === 底部操作栏 === */
+.footer-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 990;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 24rpx 40rpx;
+  padding-bottom: max(24rpx, env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(12rpx);
+  backdrop-filter: blur(12rpx);
+  border-top: 2rpx solid #f0f0f0;
+  box-shadow: 0 -8rpx 40rpx rgba(0, 0, 0, 0.03);
+
+  .footer-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8rpx;
+
+    .footer-label {
+      font-size: 22rpx;
+      color: #999;
+    }
+
+    .footer-value {
+      font-size: 30rpx;
+      font-weight: 700;
+      color: #222;
+    }
+  }
+
+  .footer-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16rpx;
+    padding: 28rpx 64rpx;
+    background: #2d635e;
+    color: #fff;
+    border: none;
+    border-radius: 999rpx;
+    font-size: 30rpx;
+    font-weight: 500;
+    box-shadow: 0 16rpx 48rpx rgba(45, 99, 94, 0.25);
+    line-height: 1;
+
+    &::after {
+      border: none;
+    }
+  }
+}
+
+/* 成功弹窗（对齐 fitment-mini-program renovation-form） */
+.success-card {
+  width: 560rpx;
+  padding: 64rpx 48rpx;
+  background: $uni-bg-color;
+  border-radius: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 16rpx 64rpx rgba(0, 0, 0, 0.15);
+}
+
+.success-icon-wrap {
+  width: 128rpx;
+  height: 128rpx;
+  margin-bottom: 32rpx;
+  background: rgba($uni-color-primary, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: $uni-text-color;
+  margin-bottom: 16rpx;
+}
+
+.success-desc {
+  font-size: 28rpx;
+  color: $uni-text-color-grey;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+</style>

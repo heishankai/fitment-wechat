@@ -7,17 +7,46 @@
   },
   "pages": [
     {
-      "path": "pages/home/index",
+      "path": "pages/labour-cost/index",
       "style": {
-        "navigationBarTitleText": "首页",
-        "navigationStyle": "custom"
+        "navigationBarTitleText": "工艺",
+        "navigationStyle": "custom",
+        "disableScroll": true
       }
-    } 
+    }
   ],
+  "subPackages": [
+    {
+      "root": "package-labor-cost",
+      "pages": [
+        {
+          "path": "labor-price-detail/index",
+          "style": {
+            "navigationBarTitleText": "工艺详情",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "labor-price-search/index",
+          "style": {
+            "navigationBarTitleText": "搜索工艺"
+          }
+        }
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/labour-cost/index": {
+      "network": "all",
+      "packages": ["package-labor-cost"]
+    }
+  },
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "装修助手",
     "navigationBarBackgroundColor": "#fff",
-    "backgroundColor": "#fff"
+    "backgroundColor": "#fff",
+    "enableShareAppMessage": true,
+    "enableShareTimeline": true
   }
 }

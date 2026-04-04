@@ -1,0 +1,374 @@
+<template>
+  <view class="page">
+    <LabourCostHeader />
+
+    <view class="panel">
+      <!-- 左侧分类导航 -->
+      <view class="nav-container">
+        <scroll-view class="nav-scroll" scroll-y enhanced :show-scrollbar="false" :style="mainScrollStyle">
+          <view v-for="cat in categories" :key="cat.id" class="nav-item"
+            :class="{ active: selectedWorkKindId === cat.id }" @tap="selectWorkKind(cat.id)">
+            <view class="nav-indicator" v-if="selectedWorkKindId === cat.id" />
+            <view class="nav-icon-wrap" :class="{ active: selectedWorkKindId === cat.id }">
+              <uni-icons v-if="cat.iconPrefix" :custom-prefix="cat.iconPrefix" :type="cat.iconType" size="22"
+                :color="selectedWorkKindId === cat.id ? '#fff' : '#9ca3af'" />
+              <uni-icons v-else :type="cat.iconType" size="22"
+                :color="selectedWorkKindId === cat.id ? '#fff' : '#9ca3af'" />
+            </view>
+            <text class="nav-text" :class="{ active: selectedWorkKindId === cat.id }">
+              {{ cat.name }}
+            </text>
+          </view>
+          <view class="nav-bottom-spacer" />
+        </scroll-view>
+      </view>
+
+      <!-- 右侧内容 -->
+      <view class="content-wrap">
+        <scroll-view class="content-scroll" scroll-y enhanced :show-scrollbar="false" :style="mainScrollStyle"
+          @scrolltolower="onScrollToLower">
+          <view class="section-header">
+            <view class="section-title-wrap">
+              <text class="section-title">
+                {{ selectedWorkKindName }}
+              </text>
+              <text class="section-subtitle"> 参考工艺 </text>
+            </view>
+          </view>
+
+          <view class="price-list">
+            <view v-if="loading && priceList.length === 0" class="empty-tip">
+              <uni-icons type="spinner-cycle" size="24" color="#2d635e" />
+              <text class="empty-text">加载中...</text>
+            </view>
+            <view v-else-if="priceList.length === 0" class="empty-tip">
+              <text class="empty-text"> 该分类暂无工艺数据 </text>
+            </view>
+
+            <labour-price-card v-for="item in priceList" :key="item.id" :item="item" />
+
+            <!-- 加载更多 -->
+            <view v-if="loading && priceList.length > 0" class="load-more">
+              <uni-icons type="spinner-cycle" size="20" color="#9ca3af" />
+              <text>加载中...</text>
+            </view>
+            <view v-else-if="finish && priceList.length > 0" class="no-more">
+              <text>没有更多了</text>
+            </view>
+          </view>
+
+          <view class="bottom-spacer" />
+        </scroll-view>
+      </view>
+    </view>
+
+  </view>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import LabourCostHeader from './components/labour-cost-header.vue'
+import labourPriceCard from './components/labour-price-card.vue'
+import { getWorkKindListService, getPriceListService } from './service'
+import { ICON_MAP } from './utils'
+
+/** 左侧分类导航不展示的工种 code（仍由接口返回，仅前端过滤） */
+const HIDDEN_WORK_KIND_CODES = new Set(['GONGZHANG', 'SHEJISHI'])
+
+const workKindList = ref<
+  { work_kind_code: string | number; work_kind_name: string }[]
+>([])
+const selectedWorkKindId = ref<string | number | null>(null)
+const priceList = ref<any[]>([])
+const loading = ref(false)
+const finish = ref(false)
+const pageIndex = ref(1)
+const pageSize = 10
+const mainScrollStyle = ref({ height: '400px' })
+
+const selectedWorkKindName = computed(
+  () =>
+    workKindList.value.find((k) => k.work_kind_code === selectedWorkKindId.value)?.work_kind_name ??
+    '',
+)
+
+// 带图标的分类（用于左侧导航）
+const categories = computed(() => {
+  const def = { iconType: 'person', iconPrefix: '' }
+  return workKindList.value.map((k) => {
+    const icon = ICON_MAP[k.work_kind_name] ?? def
+    return {
+      id: k.work_kind_code,
+      name: k.work_kind_name,
+      iconType: icon.iconType as any,
+      iconPrefix: icon.iconPrefix,
+    }
+  })
+})
+
+const loadWorkKindList = async (): Promise<void> => {
+  uni.showLoading({ title: '加载中...', mask: true })
+  try {
+    const res = await getWorkKindListService()
+    const ok =
+      res?.success === true || res?.code === 200 || res?.code === '0'
+    const data = res?.data
+    if (ok && data?.length) {
+      workKindList.value = [...data].filter(
+        (k) => !HIDDEN_WORK_KIND_CODES.has(String(k.work_kind_code ?? '')),
+      )
+      if (!workKindList.value.length) return
+      selectedWorkKindId.value = workKindList.value[0].work_kind_code
+      await loadPriceList()
+    }
+  } finally {
+    uni.hideLoading()
+  }
+}
+
+const loadPriceList = async (isLoadMore = false): Promise<void> => {
+  const workKindId = selectedWorkKindId.value
+  if (loading.value || workKindId == null) return
+  if (isLoadMore && finish.value) return
+
+  if (!isLoadMore) {
+    pageIndex.value = 1
+    priceList.value = []
+    finish.value = false
+  }
+
+  loading.value = true
+  try {
+    const res = await getPriceListService({
+      pageIndex: pageIndex.value,
+      pageSize,
+      work_kind_code: workKindId,
+    })
+
+    const ok =
+      res?.success === true || res?.code === 200 || res?.code === '0'
+    if (!ok) return
+
+    const list = res.data ?? []
+
+    if (isLoadMore) {
+      priceList.value = priceList.value.concat(list)
+    } else {
+      priceList.value = list
+    }
+
+    // 使用 pageTotal 判断是否还有更多（接口返回：pageIndex、pageSize、total、pageTotal）
+    finish.value = (res.pageIndex ?? pageIndex.value) >= (res.pageTotal ?? 1)
+    if (list.length) pageIndex.value++
+  } catch {
+    uni.showToast({ icon: 'none', title: '加载失败' })
+  } finally {
+    loading.value = false
+  }
+}
+
+const onScrollToLower = (): void => {
+  loadPriceList(true)
+}
+
+const selectWorkKind = (id: string | number): void => {
+  selectedWorkKindId.value = id
+  loadPriceList()
+}
+
+const updateScrollHeight = (): void => {
+  const sys = uni.getSystemInfoSync()
+  const rpx2px = sys.windowWidth / 750
+  const reserved = 320 * rpx2px + 260 * rpx2px
+  mainScrollStyle.value = { height: `${Math.max(200, Math.floor(sys.windowHeight - reserved))}px` }
+}
+
+onLoad(() => {
+  updateScrollHeight()
+  loadWorkKindList()
+})
+onReady(updateScrollHeight)
+</script>
+
+<style lang="scss" scoped>
+page {
+  height: 100%;
+  background: #f2f4f7;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f2f4f7;
+}
+
+.panel {
+  flex: 1;
+  min-height: 0;
+  margin-top: -120rpx;
+  background: #f2f4f7;
+  border-radius: 48rpx 48rpx 0 0;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+  box-shadow: 0 -20rpx 80rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 参考: w-[84px] bg-[#F9FAFB] border-r border-[#EFEFEF] */
+.nav-container {
+  position: relative;
+  width: 168rpx;
+  flex-shrink: 0;
+  background: #f9fafb;
+  border-right: 2rpx solid #efefef;
+  border-radius: 48rpx 0 0 24rpx;
+
+  .nav-scroll {
+    width: 100%;
+    height: 100%;
+    padding-top: 16rpx;
+  }
+
+  .nav-bottom-spacer {
+    height: 48rpx;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32rpx 8rpx;
+    position: relative;
+    transition: transform 0.2s;
+
+    .nav-indicator {
+      position: absolute;
+      left: 0;
+      /* 与图标中心对齐：padding-top 32rpx + icon-wrap 一半 44rpx */
+      top: 76rpx;
+      transform: translateY(-50%);
+      width: 6rpx;
+      height: 40rpx;
+      background: #2d635e;
+      border-radius: 0 8rpx 8rpx 0;
+      pointer-events: none;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    /* 参考: w-11 h-11 rounded-2xl, active: bg-[#2D635E] shadow-lg shadow-[#2D635E]/30 */
+    .nav-icon-wrap {
+      width: 88rpx;
+      /* 44px */
+      height: 88rpx;
+      border-radius: 32rpx;
+      /* rounded-2xl */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16rpx;
+      background: #fff;
+      border: 2rpx solid #f3f4f6;
+      transition: all 0.3s ease;
+
+      &.active {
+        background: #2d635e;
+        border-color: transparent;
+        box-shadow: 0 16rpx 48rpx rgba(45, 99, 94, 0.3);
+        /* shadow-lg shadow-[#2D635E]/30 */
+      }
+    }
+
+    .nav-text {
+      font-size: 22rpx;
+      font-weight: 500;
+      color: #9ca3af;
+      transition: color 0.2s;
+
+      &.active {
+        color: #2d635e;
+      }
+    }
+  }
+}
+
+/* 参考: bg-white rounded-tr-3xl pb-20 */
+.content-wrap {
+  flex: 1;
+  min-width: 0;
+  background: #fff;
+  border-radius: 0 48rpx 24rpx 0;
+  /* rounded-tr-3xl，底部微圆角 */
+
+  .content-scroll {
+    width: 100%;
+    height: 100%;
+    padding: 32rpx;
+    /* 底部留白，不遮挡 tabbar */
+    box-sizing: border-box;
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32rpx;
+      padding: 16rpx 0;
+
+      .section-title-wrap {
+        display: flex;
+        align-items: baseline;
+        gap: 16rpx;
+
+        .section-title {
+          font-size: 34rpx;
+          font-weight: 700;
+          color: #111827;
+        }
+
+        .section-subtitle {
+          font-size: 24rpx;
+          color: #9ca3af;
+        }
+      }
+    }
+
+    .price-list {
+      display: flex;
+      flex-direction: column;
+      gap: 32rpx;
+
+      .empty-tip {
+        padding: 80rpx 0;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16rpx;
+
+        .empty-text {
+          font-size: 28rpx;
+          color: #9ca3af;
+        }
+      }
+
+      .load-more,
+      .no-more {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12rpx;
+        padding: 32rpx;
+        font-size: 24rpx;
+        color: #9ca3af;
+      }
+    }
+
+    .bottom-spacer {
+      height: 48rpx;
+    }
+  }
+}
+</style>

@@ -74,7 +74,6 @@ export const request = <T>(options: UniApp.RequestOptions): Promise<Data<T>> => 
         reject(res)
       },
       fail(err) {
-        uni.hideLoading()
         uni.showToast({ icon: 'none', title: '网络错误，换个网络试试' })
         reject(err)
       },
